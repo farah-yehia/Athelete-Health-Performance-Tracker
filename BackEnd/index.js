@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
-const db=require("./db/Database")
+const db = require("./db/Database");
 const ENV = require("./env");
 const port = ENV.Back_Port;
+const verifyToken=require("./controller/VerifyToken")
+const jwt = require("jsonwebtoken");
 const { rateLimit } = require("express-rate-limit");
 const limiter = rateLimit({
     windowMs: 15 * 60 * 100000,
@@ -20,14 +22,50 @@ const cors = require("cors");
 app.use(
     cors({
         origin: ENV.Front_Origin, // Allow all origins during development
-        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        methods: "GET,HEAD,PUT,POST,DELETE",
         credentials: true,
         // allowedHeaders: ["Content-Type", "Authorization"],
-        })
-    );
-    // Importing routers
-    // const UserRouter = require("./router/UserRouter");
+    })
+);
 
+// Importing routers
+const AdminRouter = require("./router/AdminRouter");
+const DoctorRouter = require("./router/DoctorRouter");
+
+// Linking routers to the app
+app.use(AdminRouter);
+app.use(DoctorRouter);
+
+
+// //for testing
+// app.get("/test", verifyToken("doctor"), (req, res) => {
+//     console.log(req.headers)
+// const availabilityDays = req.doctor.availability.days;
+//   const availabilityTimeStart = req.doctor.availability.time.start;
+//   const availabilityTimeEnd = req.doctor.availability.time.end;
+//   res.json({test: `Hello Doctor ${req.doctor.name} your phone number is ${req.doctor.contactNumber} 
+//     and your available day is in ${availabilityDays} and at time  from${availabilityTimeStart} `});
+// })
+
+// async function name() {
+   
+//     const token = await jwt.sign(
+//         {
+//           name: "farah",
+//       role: "doctor",
+//       contactNumber: "0109995851",
+//       availability: {
+//         days: ["Monday", "Friday"], // Ensure this is an array
+//         time: { start: "2:00 pm", end: "5:00 pm" } // Correctly format time
+//       }
+//         },
+//        ENV.Secret_Key,
+//         { expiresIn: "1h" }
+//       );
+//     console.log(token)
+     
+// }
+// name()
 
 // Middleware to monitor requests and responses
 app.use((req, res, next) => {
@@ -38,10 +76,6 @@ app.use((req, res, next) => {
     console.log();
     next();
 });
-
-// Linking routers to the app
-// app.use(UserRouter);
-
 
 // Middleware to catch any errors
 app.use((err, req, res, _) => {
@@ -54,7 +88,7 @@ app.use((err, req, res, _) => {
 
 // Middleware to catch any requests to non-existing routes
 app.all("*", (req, res) => {
-    return res.status(200).json({ error: "Wrong Path" });
+    return res.status(400).json({ error: "Wrong Path" });
 });
 
 // Starting the server
