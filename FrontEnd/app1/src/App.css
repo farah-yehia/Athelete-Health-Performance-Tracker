@@ -114,7 +114,7 @@ h6 {
 }
 
 .light-text {
-  color:#ffffe7 !important;
+  color:#abbed4 !important;
 }
 .dark-blue-text{
   color:#181a2f !important;
@@ -149,7 +149,7 @@ h6 {
   background-color: #181a2f  !important;
 }
 .light-bg{
-  background-color: #eeb49f !important;
+  background-color: #abbed4 !important;
 }
 .blue-bg{
   background-color: #1e3a85 !important;
@@ -183,6 +183,12 @@ h6 {
 width: 5px;
 }
 ::-webkit-scrollbar-thumb{
-background-color: #2d3480;
+background-color: #b4182d;
 border-radius: thin;
+}
+.body-container{
+  background-color:#abbed4;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }

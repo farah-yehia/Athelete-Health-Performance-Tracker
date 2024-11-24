@@ -1,16 +1,13 @@
-import './App.css'
-
+import "./App.css";
+import HomePage from "./Components/HomePage/HomePage";
 function App() {
-
-
   return (
     <>
-      <h1 style={{ color: "#b4182d" }}>hello</h1>
-      <h1 style={{ color: "#181a2f" }}>hello</h1>
-      <h1 style={{ color: "#1e3a85" }}>hello</h1>
-      <h1 style={{ color: "#e3d4b1 " }}>hello</h1>
+      <div className="body-container">
+        <HomePage />
+      </div>
     </>
   );
 }
 
-export default App
+export default App;
