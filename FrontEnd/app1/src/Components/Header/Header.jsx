@@ -23,7 +23,6 @@ const Header = () => {
     const adminPages = [
       { name: "Teams", to: "/teams" },
       { name: "Doctors", to: "/doctors" },
-      { name: "Players", to: "/players" },
     ];
     const doctorPages = [
       { name: "Teams", to: "/teams" },
