@@ -22,8 +22,8 @@ import "./Login.css";
 import Loader from "../Loader/Loader.jsx";
 
 const Login = () => {
-    const { setCurrentUser, setIsAuthenticated, showMessage } =
-      useContext(currentUserContext);
+  const { setCurrentUser, setIsAuthenticated, showMessage } =
+    useContext(currentUserContext);
   const [showPassword, setShowPassword] = useState(false);
   const [loader, setLoader] = useState(false);
   const [formData, setFormData] = useState({
@@ -60,19 +60,23 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoader(true);
-    const endpoint =
-      formData.role === "doctor"
-        ? `${Back_Origin}/login`
-        : `${Back_Origin}/admins/login`;
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    // Try to check if the username is in the Admin or Doctor model
+    const adminResponse = await fetch(`${Back_Origin}/admins/login/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
 
-      const data = await response.json();
+    const doctorResponse = await fetch(`${Back_Origin}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (adminResponse.ok) {
+      // Admin login successful
+      const data = await adminResponse.json();
       setLoader(false);
       if (!data.error) {
         showMessage(data.message, false);
@@ -81,16 +85,30 @@ const Login = () => {
         setCurrentUser(jwtDecode(data.data));
         navigate("/teams");
       } else {
-        // Show error message
         showMessage(data.error, true);
         setIsAuthenticated(false);
       }
-    } catch (error) {
+    } else if (doctorResponse.ok) {
+      // Doctor login successful
+      const data = await doctorResponse.json();
       setLoader(false);
-      showMessage("An error occurred. Please try again later.", true);
+      if (!data.error) {
+        showMessage(data.message, false);
+        setCookie("token", data.data);
+        setIsAuthenticated(true);
+        setCurrentUser(jwtDecode(data.data));
+        navigate("/teams");
+      } else {
+        showMessage(data.error, true);
+        setIsAuthenticated(false);
+      }
+    } else {
+      setLoader(false);
+      showMessage("Invalid credentials for both Admin and Doctor", true);
       setIsAuthenticated(false);
     }
   };
+
   return (
     <>
       <Box

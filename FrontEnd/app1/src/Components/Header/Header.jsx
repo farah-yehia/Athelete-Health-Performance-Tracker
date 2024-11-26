@@ -1,19 +1,28 @@
 import React, { useContext, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import MuiIconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import { currentUserContext } from "../../App.jsx";
+import axios from "axios";
+import { deleteCookie, getCookie } from "../Cookie/Cookie";
+import { Back_Origin } from "../../Front_ENV";
 import homePageIcon from "../../assets/homePageIcon.webp";
 import "./Header.css";
 
 const Header = () => {
-  const { currentUser, isAuthenticated, onLogoutClick } =
-    useContext(currentUserContext);
+  const {
+    currentUser,
+    isAuthenticated,
+    setIsAuthenticated,
+    setCurrentUser,
+    showMessage,
+  } = useContext(currentUserContext);
   const [anchorElNav, setAnchorElNav] = useState(null);
   const route = useLocation().pathname;
+  const navigate = useNavigate();
 
   // Define pages and filter dynamically based on authentication and role
   const allPages = [
@@ -28,10 +37,48 @@ const Header = () => {
   const menuPages = allPages.filter((page) => {
     if (!isAuthenticated && !page.auth) return true; // Public pages
     if (isAuthenticated && page.auth) {
-      return !page.role || page.role.includes(currentUser?.role); // Role-based pages
+      if (page.role && page.role.includes(currentUser?.role)) {
+        return true; // Role-based pages
+      }
+      if (
+        currentUser?.role === "doctor" &&
+        (page.name === "My Team" || page.name === "Profile")
+      ) {
+        return true; // Show "My Team" and "Profile" for doctors
+      }
     }
     return false;
   });
+
+  // Logout logic for admin and doctor
+  const onLogoutClick = async () => {
+    const token = getCookie("token");
+    if (token) {
+      try {
+        // Determine endpoint based on role
+        const endpoint =
+          currentUser?.role === "admin"
+            ? `${Back_Origin}/admins/logout`
+            : `${Back_Origin}/logout`;
+
+        await axios.post(
+          endpoint,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Clear user data and authentication state
+        deleteCookie("token");
+        setCurrentUser({});
+        setIsAuthenticated(false);
+        showMessage("You Logged Out Successfully", false);
+        navigate("/login");
+      } catch (error) {
+        console.error("Logout Error:", error);
+        showMessage("An error occurred during logout", true);
+      }
+    }
+  };
 
   const handleOpenNavMenu = (event) => setAnchorElNav(event.currentTarget);
   const handleCloseNavMenu = () => setAnchorElNav(null);
@@ -75,7 +122,7 @@ const Header = () => {
               <button
                 key="logout"
                 className="nav-link"
-                onClick={onLogoutClick}
+                onClick={onLogoutClick} // Call the logout function
                 style={{
                   background: "none",
                   border: "none",
@@ -112,12 +159,7 @@ const Header = () => {
             id="menu-appbar"
             anchorEl={anchorElNav}
             open={Boolean(anchorElNav)}
-            onClose={() => {
-              handleCloseNavMenu();
-              // Ensure focus returns to the menu button
-              const menuButton = document.querySelector('[aria-label="menu"]');
-              if (menuButton) menuButton.focus();
-            }}
+            onClose={handleCloseNavMenu}
             PaperProps={{
               style: {
                 backgroundColor: "#b4182d",
@@ -127,23 +169,25 @@ const Header = () => {
             }}
           >
             {renderMenuLinks(true)}
-            <MenuItem>
-              <button
-                className="nav-link"
-                onClick={() => {
-                  handleCloseNavMenu(); // Close menu
-                  onLogoutClick(); // Logout
-                }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "white",
-                  cursor: "pointer",
-                }}
-              >
-                Logout
-              </button>
-            </MenuItem>
+            {isAuthenticated && (
+              <MenuItem>
+                <button
+                  className="nav-link"
+                  onClick={() => {
+                    handleCloseNavMenu(); // Close the menu
+                    onLogoutClick(); // Trigger the logout function
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  Logout
+                </button>
+              </MenuItem>
+            )}
           </Menu>
         </div>
       </nav>

@@ -92,8 +92,8 @@ const signupAdmin = async (req, res, next) => {
     if (await Admin.findOne({ username: username })) {
         return res.status(400).json({ error: "Username already exists" });
     }
-    if (!role) {
-        return res.status(400).json({ error: "Role is required" });
+    if (role!=="admin") {
+        return res.status(400).json({ error: "Only admin role allowed here" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newAdmin = new Admin({

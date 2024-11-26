@@ -4,19 +4,35 @@ import { useNavigation } from "react-router";
 import { useContext } from "react";
 import { currentUserContext } from "../../App";
 
-const Logout = async() => {
-    const{setIsAuthenticated , showMessage , setCurrentUser}=useContext(currentUserContext)
-    const navigate=useNavigation();
- const token = getCookie("token");
+const Logout = async () => {
+  const { setIsAuthenticated, showMessage, setCurrentUser, currentUser } =
+    useContext(currentUserContext);
+  const navigate = useNavigate();
+
+  const token = getCookie("token");
   if (token) {
     try {
-      await axios.post(`${Back_Origin}/admins/logout`); // Adjust endpoint as per your API.
-      deleteCookie("token"); // Clear the token cookie.
+      // Determine endpoint based on user role
+      const endpoint =
+        currentUser?.role === "admin"
+          ? `${Back_Origin}/admins/logout`
+          : `${Back_Origin}/logout`;
+
+      // Call the logout API
+      await axios.post(
+        endpoint,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Clear authentication state and redirect
+      deleteCookie("token"); // Remove the token from cookies
       setCurrentUser({});
       setIsAuthenticated(false);
       showMessage("You Logged Out Successfully", false);
-      navigate("/login");
+      navigate("/login"); // Redirect to the login page
     } catch (error) {
+      console.error("Logout Error:", error);
       showMessage("An error occurred during logout", true);
     }
   }

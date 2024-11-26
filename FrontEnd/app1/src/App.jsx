@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
+import {
+  Route,
+  Routes,
+  useNavigate,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import {jwtDecode} from "jwt-decode";
 import axios from "axios";
@@ -17,13 +23,11 @@ import Teams from "./Components/Teams/Teams";
 import MyTeam from "./Components/MyTeam/MyTeam";
 import Doctors from "./Components/Doctors/Doctors";
 import Logout from "./Components/Logout/Logout";
-import Loader from "./Components/Loader/Loader"; // Placeholder for the loader
+import Loader from "./Components/Loader/Loader";
 
 import { getCookie, deleteCookie } from "./Components/Cookie/Cookie";
 
 export const currentUserContext = React.createContext();
-
-let messagesList = [];
 
 function App() {
   const [showHeaderAndFooter, setShowHeaderAndFooter] = useState(true);
@@ -33,112 +37,52 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Set `showHeaderAndFooter` dynamically based on route
+  // Show/hide header and footer dynamically
   useEffect(() => {
     const noHeaderFooterRoutes = ["/login", "/signup"];
     setShowHeaderAndFooter(!noHeaderFooterRoutes.includes(location.pathname));
   }, [location.pathname]);
 
-  // Handle authentication state and current user
+  // Handle authentication state and fetch user details
   useEffect(() => {
     const token = getCookie("token");
     if (isAuthenticated && token) {
       try {
-        setCurrentUser(jwtDecode(token));
+        const decodedUser = jwtDecode(token);
+        setCurrentUser(decodedUser);
       } catch (error) {
         console.error("Invalid token:", error);
-        setIsAuthenticated(false);
-        deleteCookie("token");
+        logoutUser();
       }
     }
   }, [isAuthenticated]);
 
-  // Utility: Toast Notifications
+  // Logout function
+  const logoutUser = async () => {
+    try {
+      await axios.post(`${Back_Origin}/admins/logout`);
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+    deleteCookie("token");
+    setCurrentUser({});
+    setIsAuthenticated(false);
+    navigate("/login");
+  };
+
+  // Notification utility
   const showMessage = (msg, error = false) => {
-    if (msg && typeof error === "boolean" && !messagesList.includes(msg)) {
-      messagesList.push(msg);
-      toast[error ? "error" : "success"](msg, {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        onClose: () => {
-          messagesList = messagesList.filter((e) => e !== msg);
-        },
-      });
-    }
-  };
-
-  // Logout Functionality
-  const onLogoutClick = async () => {
-    const token = getCookie("token");
-    if (token) {
-      try {
-        await axios.post(`${Back_Origin}/admins/logout`);
-        deleteCookie("token");
-        setCurrentUser({});
-        setIsAuthenticated(false);
-        showMessage("You Logged Out Successfully", false);
-        navigate("/login");
-      } catch (error) {
-        console.error("Logout Error:", error);
-        showMessage("An error occurred during logout", true);
-      }
-    }
-  };
-
-  // Utility: Confirmation Toast
-  const confirmationToast = (confirmationMsg) => {
-    return new Promise((resolve) => {
-      toast.info(
-        <div>
-          <h6 className="mb-3">{confirmationMsg}</h6>
-          <div className="d-flex justify-content-center gap-3">
-            <button
-              onClick={() => {
-                resolve(true);
-                toast.dismiss();
-              }}
-              style={{
-                padding: "5px 15px",
-                backgroundColor: "green",
-                color: "white",
-                border: "none",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
-            >
-              Confirm
-            </button>
-            <button
-              onClick={() => {
-                resolve(false);
-                toast.dismiss();
-              }}
-              style={{
-                padding: "5px 15px",
-                backgroundColor: "red",
-                color: "white",
-                border: "none",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>,
-        {
-          className: "toast-confirm",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        }
-      );
+    toast[error ? "error" : "success"](msg, {
+      autoClose: 3000,
+      closeOnClick: true,
     });
+  };
+
+  // Route Protection Wrapper
+  const ProtectedRoute = ({ children, role }) => {
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (role && currentUser?.role !== role) return <Navigate to="/" replace />;
+    return children;
   };
 
   return (
@@ -149,13 +93,13 @@ function App() {
         showMessage,
         isAuthenticated,
         setIsAuthenticated,
-        onLogoutClick,
+        logoutUser,
       }}
     >
       <div className="body-container">
         {showHeaderAndFooter && <Header />}
         <main className="main-content">
-          <ToastContainer style={{ width: "fit-content" }} />
+          <ToastContainer />
           {loading ? (
             <Loader />
           ) : (
@@ -163,10 +107,38 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/teams" element={<Teams />} />
-              <Route path="/doctors" element={<Doctors />} />
-              <Route path="/my-team" element={<MyTeam />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teams"
+                element={
+                  <ProtectedRoute >
+                    <Teams />
+                 </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-team"
+                element={
+                  <ProtectedRoute role="doctor">
+                    <MyTeam />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/doctors"
+                element={
+                  <ProtectedRoute role="admin">
+                    <Doctors />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/logout" element={<Logout />} />
             </Routes>
           )}

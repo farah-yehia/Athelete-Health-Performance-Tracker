@@ -46,7 +46,7 @@ const signupPlayer = async (req, res, next) => {
 }
 };
 
-// Function to login Player
+// Function to login doctor
 const loginPlayer =async (req, res, next) => {
     try {
         console.log("req is => " , req.body)
