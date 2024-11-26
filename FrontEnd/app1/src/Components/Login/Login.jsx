@@ -22,14 +22,14 @@ import "./Login.css";
 import Loader from "../Loader/Loader.jsx";
 
 const Login = () => {
+    const { setCurrentUser, setIsAuthenticated, showMessage } =
+      useContext(currentUserContext);
   const [showPassword, setShowPassword] = useState(false);
   const [loader, setLoader] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-  const { setCurrentUser, setIsAuthenticated, showMessage } =
-    useContext(currentUserContext);
   const navigate = useNavigate();
 
   if (loader) {
@@ -93,7 +93,16 @@ const Login = () => {
   };
   return (
     <>
-      <Box className="login-container">
+      <Box
+        className="login-container"
+        sx={{
+          maxWidth: "400px",
+          margin: "auto",
+          padding: 3,
+          border: "1px solid #ccc",
+          borderRadius: 2,
+        }}
+      >
         <h4 className="mb-3">Login to your account</h4>
         <form onSubmit={handleSubmit}>
           {/* Username Field */}
@@ -183,9 +192,14 @@ const Login = () => {
             type="submit"
             variant="contained"
             className="extraBold-text pascalCase-text"
-            style={{ backgroundColor: "black", color: "white" }}
             fullWidth
-            sx={{ my: 2 }}
+            sx={{
+              backgroundColor: "black",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "#b4182d", // Optional hover effect
+              },
+            }}
           >
             Sign In
           </Button>
@@ -195,7 +209,7 @@ const Login = () => {
             to="/signup"
             variant="body2"
             className="blue-text"
-            style={{ display: "block", marginTop: "1rem",color:"black" }}
+            style={{ display: "block", marginTop: "1rem", color: "black" }}
           >
             Don't have an account? Sign up
           </NavLink>

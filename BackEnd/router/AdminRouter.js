@@ -23,5 +23,6 @@ router.put("/admins/:id", verifyToken("admin"),controller.editAdmin);
 // Admin authentication routes
 router.post("/admins/signup",controller.signupAdmin);
 router.post('/admins/login',controller.loginAdmin);
+router.post('/admins/logout',controller.logout);
 
 module.exports = router;

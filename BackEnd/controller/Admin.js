@@ -146,6 +146,15 @@ const loginAdmin =async (req, res, next) => {
     next(`ERROR IN: login function => ${error}`);
 }
 };
+//logout
+const logout=async (req, res, next) => {
+  try {
+    res.status(201).json({ message: "Logged out successfully" });
+  } catch (err) {
+    res.status(404).json({ error: "Unexpected Error Occurred" });
+    next(`ERROR IN: Logout Function => ${err}`);
+  }
+};
 // Player CRUD operations
 const addPlayer = async (req, res) => {
     try {
@@ -210,4 +219,4 @@ const updateDoctor = async (req, res) => {
 };
 
 module.exports = { getAdmin, deleteAdmin, editAdmin ,signupAdmin, loginAdmin,
-    addPlayer,deletePlayer,updatePlayer,addDoctor,deleteDoctor,updateDoctor };
+    addPlayer,deletePlayer,updatePlayer,addDoctor,deleteDoctor,updateDoctor,logout };
