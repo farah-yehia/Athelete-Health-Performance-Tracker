@@ -73,11 +73,14 @@ const editAdmin= async (req, res, next) => {
 
 //Function to allow a Admin to create an account (signup)
 const signupAdmin = async (req, res, next) => {
+    const validAdminIDs = ["ADMIN123", "SUPERADMIN456", "30705020901981"];
+        // Check if the provided adminID is valid
+ 
     try {
-    const { name,username, password, role} = req.body;
-    console.log(req.body)
-    const id = v4();
-    if (!validator.isLength(name, { min: 3 })) {
+        const { name,username, password, role ,id} = req.body;
+        console.log(req.body)
+        // const id = v4();
+        if (!validator.isLength(name, { min: 3 })) {
         return res.status(400).json({ error: "Name must be at least 3 characters long" });
     }
     if (!validator.isAlphanumeric(username)) {
@@ -95,6 +98,9 @@ const signupAdmin = async (req, res, next) => {
     if (role!=="admin") {
         return res.status(400).json({ error: "Only admin role allowed here" });
     }
+     if (!validAdminIDs.includes(id)) {
+    return res.status(403).json({ message: "Unauthorized admin ID" });
+  }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newAdmin = new Admin({
         name,

@@ -39,7 +39,7 @@ function App() {
 
   // Show/hide header and footer dynamically
   useEffect(() => {
-    const noHeaderFooterRoutes = ["/login", "/signup"];
+    const noHeaderFooterRoutes = [""];
     setShowHeaderAndFooter(!noHeaderFooterRoutes.includes(location.pathname));
   }, [location.pathname]);
 

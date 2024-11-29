@@ -114,11 +114,12 @@ const Login = () => {
       <Box
         className="login-container"
         sx={{
-          maxWidth: "400px",
+          maxWidth: "500px",
           margin: "auto",
           padding: 3,
           border: "1px solid #ccc",
           borderRadius: 2,
+          backgroundColor: "aliceblue",
         }}
       >
         <h4 className="mb-3">Login to your account</h4>

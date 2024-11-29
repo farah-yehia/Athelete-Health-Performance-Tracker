@@ -12,6 +12,8 @@ import {
   MenuItem,
   Select,
   InputLabel,
+  FormGroup,
+  Checkbox,
 } from "@mui/material";
 import { Back_Origin } from "../../Front_ENV.jsx";
 import { useNavigate } from "react-router";
@@ -52,6 +54,7 @@ const SignUp = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    
 
     // General validations
     if (!formData.name.trim() || formData.name.length < 3) {
@@ -91,6 +94,21 @@ const SignUp = () => {
     return newErrors;
   };
 
+const handleCheckboxChange = (event) => {
+  const { value, checked } = event.target;
+  setFormData((prev) => {
+    if (checked) {
+      // Add day if checkbox is checked
+      return { ...prev, availability: [...prev.availability, value] };
+    } else {
+      // Remove day if checkbox is unchecked
+      return {
+        ...prev,
+        availability: prev.availability.filter((day) => day !== value),
+      };
+    }
+  });
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -145,9 +163,11 @@ const SignUp = () => {
         padding: 3,
         border: "1px solid #ccc",
         borderRadius: 2,
+        backgroundColor: "aliceblue",
       }}
     >
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" gutterBottom style={{fontSize:" 1.5em !important" ,
+    fontFamily:"Oswald" , fontWeight:"bolder"}}>
         Sign Up
       </Typography>
       <TextField
@@ -233,14 +253,32 @@ const SignUp = () => {
             error={!!errors.contactNumber}
             helperText={errors.contactNumber}
           />
-          <TextField
-            label="Availability"
-            name="availability"
-            value={formData.availability}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
+          <FormControl component="fieldset" fullWidth margin="normal">
+            <FormLabel component="legend">Availability</FormLabel>
+            <FormGroup row>
+              {[
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ].map((day) => (
+                <FormControlLabel
+                  key={day}
+                  control={
+                    <Checkbox
+                      checked={formData.availability.includes(day)}
+                      onChange={handleCheckboxChange}
+                      value={day}
+                    />
+                  }
+                  label={day}
+                />
+              ))}
+            </FormGroup>
+          </FormControl>
         </>
       )}
       {formData.role === "admin" && (
