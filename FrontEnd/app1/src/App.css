@@ -184,16 +184,17 @@ h6 {
 width: 5px;
 }
 ::-webkit-scrollbar-thumb{
-background-color: #abbed4;
+background-color: #aebfd4;
 border-radius: thin;
 }
 .body-container{
-  background-color:#abbed4;
+  background-color:#aebfd4;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   margin: 0;
   overflow: hidden;
+  user-select: none;
 }
 .main-content {
   flex-grow: 1; /* Allows the main content to fill remaining space */

@@ -26,7 +26,7 @@ const Header = () => {
 
   // Define pages and filter dynamically based on authentication and role
   const allPages = [
-    { name: "Teams", to: "/teams", auth: true, role: ["admin", "doctor"] },
+    { name: "Teams", to: "/teams", auth: false },
     { name: "My Team", to: "/my-team", auth: true, role: ["doctor"] },
     { name: "Doctors", to: "/doctors", auth: true, role: ["admin"] },
     { name: "Profile", to: "/profile", auth: true },
@@ -35,7 +35,10 @@ const Header = () => {
   ];
 
   const menuPages = allPages.filter((page) => {
-    if (!isAuthenticated && !page.auth) return true; // Public pages
+    // Always show public pages for unauthenticated users
+    if (!isAuthenticated && !page.auth) return true;
+
+    // Handle authenticated user pages
     if (isAuthenticated && page.auth) {
       if (page.role && page.role.includes(currentUser?.role)) {
         return true; // Role-based pages
@@ -47,6 +50,15 @@ const Header = () => {
         return true; // Show "My Team" and "Profile" for doctors
       }
     }
+
+    // Special case: Make "Teams" public for guests and visible to admin/doctor roles
+    if (
+      page.name === "Teams" &&
+      (!isAuthenticated || ["admin", "doctor"].includes(currentUser?.role))
+    ) {
+      return true;
+    }
+
     return false;
   });
 
@@ -182,6 +194,7 @@ const Header = () => {
                     border: "none",
                     color: "white",
                     cursor: "pointer",
+                    fontSize:" x-large"
                   }}
                 >
                   Logout

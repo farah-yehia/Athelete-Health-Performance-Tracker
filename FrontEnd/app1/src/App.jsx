@@ -118,9 +118,10 @@ function App() {
               <Route
                 path="/teams"
                 element={
-                  <ProtectedRoute >
+                  <ProtectedRoute role="admin">
+                    {" "}
                     <Teams />
-                 </ProtectedRoute>
+                  </ProtectedRoute>
                 }
               />
               <Route

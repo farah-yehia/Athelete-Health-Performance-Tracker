@@ -50,6 +50,11 @@
     }
 
     .blue-text {
-        font-size: 12px;
+        font-size: 15px;
     }
+}
+
+.blue-text  span:hover {
+color: #b4182d !important;
+
 }

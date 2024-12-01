@@ -114,12 +114,10 @@ const Login = () => {
       <Box
         className="login-container"
         sx={{
-          maxWidth: "500px",
+          maxWidth: "70%",
           margin: "auto",
-          padding: 3,
-          border: "1px solid #ccc",
-          borderRadius: 2,
-          backgroundColor: "aliceblue",
+          padding: "30px",
+          borderRadius: "9px",
         }}
       >
         <h4 className="mb-3">Login to your account</h4>
@@ -216,7 +214,7 @@ const Login = () => {
               backgroundColor: "black",
               color: "white",
               "&:hover": {
-                backgroundColor: "#b4182d", // Optional hover effect
+                backgroundColor: "#b4182d",
               },
             }}
           >
@@ -228,9 +226,16 @@ const Login = () => {
             to="/signup"
             variant="body2"
             className="blue-text"
-            style={{ display: "block", marginTop: "1rem", color: "black" }}
+            style={{
+              display: "block",
+              marginTop: "1rem",
+              color: "black",
+            }}
           >
-            Don't have an account? Sign up
+            Don't have an account?
+            <span style={{ color: "#1e3a85", fontWeight: "bolder" }}>
+              Sign up
+            </span>
           </NavLink>
         </form>
       </Box>

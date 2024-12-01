@@ -158,16 +158,23 @@ const handleCheckboxChange = (event) => {
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        maxWidth: "400px",
+        maxWidth:"50%",
         margin: "auto",
-        padding: 3,
-        border: "1px solid #ccc",
-        borderRadius: 2,
-        backgroundColor: "aliceblue",
+        marginBottom:"60px !important",
+        marginTop:"60px !important",
+        padding: "30px",
+        borderRadius: "9px",
       }}
     >
-      <Typography variant="h5" gutterBottom style={{fontSize:" 1.5em !important" ,
-    fontFamily:"Oswald" , fontWeight:"bolder"}}>
+      <Typography
+        variant="h5"
+        gutterBottom
+        style={{
+          fontSize: " 1.5em !important",
+          fontFamily: "Oswald",
+          fontWeight: "bolder",
+        }}
+      >
         Sign Up
       </Typography>
       <TextField
