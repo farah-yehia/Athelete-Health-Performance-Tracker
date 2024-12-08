@@ -53,7 +53,7 @@ const Header = () => {
 
     // Special case: Make "Teams" public for guests and visible to admin/doctor roles
     if (
-      page.name === "Teams" &&
+      page.name === "teams" &&
       (!isAuthenticated || ["admin", "doctor"].includes(currentUser?.role))
     ) {
       return true;

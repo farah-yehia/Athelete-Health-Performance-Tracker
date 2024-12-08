@@ -1,10 +1,21 @@
 import React from 'react'
+import TeamsCard from '../TeamsCard/TeamsCard'
 
-const Teams = () => {
+const Teams = ({data}) => {
+const players = data.map((player)=>{
+  return(
+    <TeamsCard key={player.id} {...player} />
+    
+  )
+})
+console.log(players)
+
   return (
-    <div>
-   <h1>Teams Page</h1>   
-    </div>
+    <>
+    <div className="teams">
+      {players}
+      </div> 
+    </>
   )
 }
 

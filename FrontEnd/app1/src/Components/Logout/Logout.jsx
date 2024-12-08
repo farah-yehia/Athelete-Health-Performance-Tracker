@@ -1,6 +1,6 @@
 import { deleteCookie,getCookie } from "../Cookie/Cookie";
 import { Back_Origin } from "../../Front_ENV";
-import { useNavigation } from "react-router";
+import { useNavigate } from "react-router";
 import { useContext } from "react";
 import { currentUserContext } from "../../App";
 
