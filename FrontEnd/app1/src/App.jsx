@@ -25,6 +25,7 @@ import Doctors from "./Components/Doctors/Doctors";
 import Logout from "./Components/Logout/Logout";
 import Loader from "./Components/Loader/Loader";
 
+
 import { getCookie, deleteCookie } from "./Components/Cookie/Cookie";
 
 export const currentUserContext = React.createContext();
@@ -285,9 +286,12 @@ function App() {
             <Loader />
           ) : (
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+
+              {/* Protected Routes */}
               <Route
                 path="/profile"
                 element={
@@ -299,8 +303,9 @@ function App() {
               <Route
                 path="/teams"
                 element={
-                    <Teams data={data} />
                  
+                    <Teams data={data} />
+                  
                 }
               />
               <Route

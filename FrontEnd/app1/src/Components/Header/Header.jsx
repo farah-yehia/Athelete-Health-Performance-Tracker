@@ -35,39 +35,28 @@ const Header = () => {
   ];
 
   const menuPages = allPages.filter((page) => {
-    // Always show public pages for unauthenticated users
+    // "Teams" is public for everyone
+    if (page.name === "Teams") return true;
+
     if (!isAuthenticated && !page.auth) return true;
 
-    // Handle authenticated user pages
     if (isAuthenticated && page.auth) {
-      if (page.role && page.role.includes(currentUser?.role)) {
-        return true; // Role-based pages
+      if (currentUser?.role === "admin") {
+        return ["Doctors", "Profile"].includes(page.name);
       }
-      if (
-        currentUser?.role === "doctor" &&
-        (page.name === "My Team" || page.name === "Profile")
-      ) {
-        return true; // Show "My Team" and "Profile" for doctors
+      if (currentUser?.role === "doctor") {
+        return ["My Team", "Profile"].includes(page.name);
       }
-    }
-
-    // Special case: Make "Teams" public for guests and visible to admin/doctor roles
-    if (
-      page.name === "teams" &&
-      (!isAuthenticated || ["admin", "doctor"].includes(currentUser?.role))
-    ) {
-      return true;
     }
 
     return false;
   });
 
-  // Logout logic for admin and doctor
+  // Logout logic
   const onLogoutClick = async () => {
     const token = getCookie("token");
     if (token) {
       try {
-        // Determine endpoint based on role
         const endpoint =
           currentUser?.role === "admin"
             ? `${Back_Origin}/admins/logout`
@@ -79,7 +68,6 @@ const Header = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Clear user data and authentication state
         deleteCookie("token");
         setCurrentUser({});
         setIsAuthenticated(false);
@@ -134,7 +122,7 @@ const Header = () => {
               <button
                 key="logout"
                 className="nav-link"
-                onClick={onLogoutClick} // Call the logout function
+                onClick={onLogoutClick}
                 style={{
                   background: "none",
                   border: "none",
@@ -153,6 +141,20 @@ const Header = () => {
                 {page.name}
               </NavLink>
             )
+          )}
+          {isAuthenticated && (
+            <button
+              className="nav-link"
+              onClick={onLogoutClick}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "white",
+              }}
+            >
+              Logout
+            </button>
           )}
         </div>
 
@@ -186,15 +188,14 @@ const Header = () => {
                 <button
                   className="nav-link"
                   onClick={() => {
-                    handleCloseNavMenu(); // Close the menu
-                    onLogoutClick(); // Trigger the logout function
+                    handleCloseNavMenu();
+                    onLogoutClick();
                   }}
                   style={{
                     background: "none",
                     border: "none",
                     color: "white",
                     cursor: "pointer",
-                    fontSize:" x-large"
                   }}
                 >
                   Logout
