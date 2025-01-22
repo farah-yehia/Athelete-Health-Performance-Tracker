@@ -36,6 +36,10 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Helper function to generate random values within a range
+  const getRandomValue = (min, max) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
+
   // Fetch league data
   useEffect(() => {
     const fetchLeagues = async () => {
@@ -54,8 +58,8 @@ function App() {
               league.logo ||
               "../public/default-player-image.png", // Serve a local fallback image
             number: league.number || "N/A",
-            height: league.height || "N/A",
-            weight: league.weight || "N/A",
+            height:  getRandomValue(165, 190),
+            weight: getRandomValue(70, 90),
             team: league.team || "Unknown Team",
             distance: league.distance || "N/A",
             img: league.img || "../public/default-player-image.png", // Use a public path for fallback image
