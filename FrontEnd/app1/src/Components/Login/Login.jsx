@@ -62,7 +62,7 @@ const Login = () => {
     setLoader(true);
 
     // Try to check if the username is in the Admin or Doctor model
-    const adminResponse = await fetch(`${Back_Origin}/admins/login/`, {
+    const adminResponse = await fetch(`${Back_Origin}/admins/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),

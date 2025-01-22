@@ -24,5 +24,8 @@ router.put("/admins/:id", verifyToken("admin"),controller.editAdmin);
 router.post("/admins/signup",controller.signupAdmin);
 router.post('/admins/login',controller.loginAdmin);
 router.post('/admins/logout',controller.logout);
+//fetchLeagues
+router.get("/api/leagues",controller.fetchLeagues);
+
 
 module.exports = router;

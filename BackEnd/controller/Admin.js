@@ -3,7 +3,9 @@ const { v4 } = require("uuid");
 const bcrypt=require("bcrypt")
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
-const ENV =require("../env")
+const ENV =require("../env");
+const axios=require("axios")
+const{API_KEY}=require("../env")
 // Function to add a Admin
 const getAdmin = async (req, res, next) => {
     try {
@@ -223,6 +225,53 @@ const updateDoctor = async (req, res) => {
         res.status(400).json(`ERROR IN: updateDoctor function => ${error}`);
     }
 };
+const FPL_API_URL = "https://fantasy.premierleague.com/api/bootstrap-static/";
+const fetchLeagues = async (req, res) => {
+  try {
+    const response = await axios.get(FPL_API_URL);
+    const players = response.data.elements
+      .map((player) => ({
+        id: player.id,
+        name: `${player.first_name} ${player.second_name}`,
+        number: player.code,
+        height: player.height || "N/A", // Add a default value if not available
+        weight: player.weight || "N/A",
+        team:
+          response.data.teams.find((team) => team.id === player.team)?.name ||
+          "Unknown",
+        distance: Math.random().toFixed(2), // Mock distance if not in API
+        img: player.photo
+          ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${
+              player.photo.split(".")[0]
+            }.png`
+          : "/default-player-image.png", // Use a local fallback image if `player.photo` is missing
+      }))
+      .slice(0, 27); // Limit the array to 100 entries
 
-module.exports = { getAdmin, deleteAdmin, editAdmin ,signupAdmin, loginAdmin,
-    addPlayer,deletePlayer,updatePlayer,addDoctor,deleteDoctor,updateDoctor,logout };
+    console.log(players); // Verify the data
+
+    res.status(200).json({ data: players });
+  } catch (error) {
+    console.error("Error fetching FPL data:", error.message);
+    res.status(500).json({ error: "Failed to fetch player data." });
+  }
+};
+
+
+module.exports = { fetchLeagues };
+
+module.exports = {
+  getAdmin,
+  deleteAdmin,
+  editAdmin,
+  signupAdmin,
+  loginAdmin,
+  addPlayer,
+  deletePlayer,
+  updatePlayer,
+  addDoctor,
+  deleteDoctor,
+  updateDoctor,
+  logout,
+  fetchLeagues,
+};

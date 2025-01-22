@@ -9,12 +9,12 @@ mongoose
 const playerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   id: { type: String, required: true },
-  gender: { type: String, enum: ["Male", "Female"], required: true },
+  number: { type: String, required: true },
   weight: { type: String, required: true },
   height: { type: String, required: true },
   age: { type: Number, required: true },
   team: { type: String, required: true }, // Team name
-  image: { type: String, default: "" },
+  img: { type: String, default: "" },
   healthMetrics: {
     heartRate: { type: Number }, // Real-time heart rate data
     distanceCovered: { type: Number }, // Distance in kilometers
