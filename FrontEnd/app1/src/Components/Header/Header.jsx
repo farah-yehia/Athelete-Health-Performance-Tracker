@@ -127,6 +127,10 @@ const Header = () => {
                   border: "none",
                   cursor: "pointer",
                   color: "white",
+
+
+
+
                 }}
               >
                 Logout
@@ -195,6 +199,7 @@ const Header = () => {
                     border: "none",
                     color: "white",
                     cursor: "pointer",
+                    fontSize:"medium"
                   }}
                 >
                   Logout

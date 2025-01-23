@@ -23,7 +23,11 @@ import MyTeam from "./Components/MyTeam/MyTeam";
 import Doctors from "./Components/Doctors/Doctors";
 import Logout from "./Components/Logout/Logout";
 import Loader from "./Components/Loader/Loader";
-import { getCookie, deleteCookie } from "./Components/Cookie/Cookie";
+import {
+  getCookie,
+  deleteCookie,
+  checkCookieExpiry,
+} from "./Components/Cookie/Cookie";
 
 export const currentUserContext = React.createContext();
 
@@ -93,18 +97,36 @@ function App() {
   }, [location.pathname]);
 
   // Handle authentication state
-  useEffect(() => {
-    const token = getCookie("token");
-    if (isAuthenticated && token) {
-      try {
+useEffect(() => {
+  let token = getCookie("token");
+  if (isAuthenticated) {
+    try {
+      if (token) {
         const decodedUser = jwtDecode(token);
         setCurrentUser(decodedUser);
-      } catch (error) {
-        console.error("Invalid token:", error);
-        logoutUser();
       }
+      const interval = setInterval(() => {
+        token = getCookie("token");
+        if (!token) {
+          logoutUser();
+        } else {
+          if (checkCookieExpiry("token")) {
+            logoutUser();
+          }
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    } catch (error) {
+      console.error("Invalid token:", error);
+      logoutUser();
     }
-  }, [isAuthenticated]);
+  }
+  else{
+logoutUser()
+
+  }
+}, [isAuthenticated]);
+
 
   // Logout function
   const logoutUser = async () => {

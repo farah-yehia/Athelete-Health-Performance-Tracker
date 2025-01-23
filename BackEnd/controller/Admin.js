@@ -239,16 +239,17 @@ const fetchLeagues = async (req, res) => {
         team:
           response.data.teams.find((team) => team.id === player.team)?.name ||
           "Unknown",
-        distance: Math.random().toFixed(2), // Mock distance if not in API
+        distance: Math.random().toFixed(2), 
         img: player.photo
           ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${
               player.photo.split(".")[0]
             }.png`
-          : "/default-player-image.png", // Use a local fallback image if `player.photo` is missing
+          : "/default-player-image.png", 
       }))
-      .slice(0, 27); // Limit the array to 100 entries
+      .slice(0, 27); 
 
     console.log(players); // Verify the data
+    
 
     res.status(200).json({ data: players });
   } catch (error) {
@@ -258,7 +259,6 @@ const fetchLeagues = async (req, res) => {
 };
 
 
-module.exports = { fetchLeagues };
 
 module.exports = {
   getAdmin,
