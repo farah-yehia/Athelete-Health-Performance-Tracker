@@ -5,12 +5,12 @@ import "./Teams.css";
 
 const Teams = () => {
   const teams = [
-    { name: "Aston Villa", img: "../../../public/aston_villa.png.webp" },
-    { name: "Man City", img: "../../../public/man_city.png" },
-    { name: "Crystal Palace", img: "../../../public/crystal_palace.png" },
-    { name: "Man Utd", img: "../../../public/man_utd.png" },
-    { name: "Everton", img: "../../../public/everton.png" },
-    { name: "Liverpool", img: "../../../public/liverpool.png" },
+    { name: "Aston Villa", img: "aston_villa.png.webp" },
+    { name: "Man City", img: "man_city.png" },
+    { name: "Crystal Palace", img: "crystal_palace.png" },
+    { name: "Man Utd", img: "man_utd.png" },
+    { name: "Everton", img: "everton.png" },
+    { name: "Liverpool", img: "liverpool.png" },
   ]; // Example teams with images
 
   return (

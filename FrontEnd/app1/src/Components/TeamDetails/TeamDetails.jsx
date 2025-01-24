@@ -49,6 +49,7 @@ const TeamDetails = () => {
       </div>
     </div>
   );
+
 };
 
 export default TeamDetails;

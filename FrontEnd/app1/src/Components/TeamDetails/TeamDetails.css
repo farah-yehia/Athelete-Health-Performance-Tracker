@@ -1,67 +1,106 @@
+/* General Container Styling */
 .team-details-container {
-    padding: 20px;
     max-width: 1200px;
-    margin: 0 auto;
+    margin: auto;
+    padding: 20px;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    overflow-y: scroll;
-    box-sizing: border-box;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Header Styling */
 .team-details-container h2 {
-    font-size: 24px;
+    font-size: 2rem;
     margin-bottom: 20px;
     color: #333;
 }
 
-.players-list {
-display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    width: 100%;
-    justify-content: center;
-    margin-top: 20px;
-    max-width: 1000px;
-}
-
-
+/* Error Message Styling */
 .error-message {
-    color: red;
-    font-weight: bold;
+    color: #e74c3c;
+    font-size: 1.2rem;
     margin: 20px 0;
 }
 
-.players-list p {
-    color: #b4182d;
-    font-style: italic;
+/* Horizontal Scroll for Players List */
+.players-list {
+    display: flex;
+    flex-wrap: nowrap;
+    /* Prevent wrapping */
+    overflow-x: auto;
+    /* Enable horizontal scrolling */
+    gap: 20px;
+    padding: 10px 0;
+    scroll-behavior: smooth;
+    /* Smooth scrolling */
 }
 
-/* Additional styling for TeamsCard component */
-.teams-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 5px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.players-list::-webkit-scrollbar {
+    height: 10px;
 }
 
-.teams-card img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 5px;
+.players-list::-webkit-scrollbar-thumb {
+    background-color: #ffc107;
+    border-radius: 10px;
 }
 
-.teams-card h3 {
-    color: #333;
-    font-size: 18px;
-    margin-top: 10px;
+.players-list::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
 }
 
+/* Card Styling */
+.card {
+    flex: 0 0 auto;
+    /* Prevent shrinking and ensure a fixed width */
+    width: 250px;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    background: linear-gradient(145deg, #b4182d, #e0a800);
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
 
-.teams-card p {
-    color: #777;
-    font-size: 14px;
-    margin-top: 5px;
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Image */
+.card-image img {
+    border-radius: 12px 12px 0 0;
+    object-fit: cover;
+    width: 100%;
+    height: 190px;
+}
+
+/* Card Body */
+.card-body {
+    padding: 15px;
+    text-align: left;
+}
+
+.card-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.card-text {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+/* Placeholder for No Image */
+.card-image img[src*="No+Image"] {
+    background: #f4f4f4;
+    color: #ccc;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
