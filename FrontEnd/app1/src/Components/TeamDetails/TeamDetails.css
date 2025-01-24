@@ -1,0 +1,67 @@
+.team-details-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-y: scroll;
+    box-sizing: border-box;
+}
+
+.team-details-container h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.players-list {
+display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    width: 100%;
+    justify-content: center;
+    margin-top: 20px;
+    max-width: 1000px;
+}
+
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.players-list p {
+    color: #b4182d;
+    font-style: italic;
+}
+
+/* Additional styling for TeamsCard component */
+.teams-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.teams-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.teams-card h3 {
+    color: #333;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+
+.teams-card p {
+    color: #777;
+    font-size: 14px;
+    margin-top: 5px;
+}

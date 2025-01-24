@@ -13,13 +13,11 @@ const playerSchema = new mongoose.Schema({
   weight: { type: String, required: true },
   height: { type: String, required: true },
   age: { type: Number, required: true },
-  team: { type: String, required: true }, // Team name
+  team: { type: String}, // Team name
   img: { type: String, default: "" },
-  healthMetrics: {
-    heartRate: { type: Number }, // Real-time heart rate data
-    distanceCovered: { type: Number }, // Distance in kilometers
-    lastUpdated: { type: Date, default: Date.now }, // Timestamp of last update
-  },
+  heartRate: { type: Number }, // Real-time heart rate data
+  distanceCovered: { type: Number }, // Distance in kilometers
+  lastUpdated: { type: Date, default: Date.now }, // Timestamp of last update
   role: { type: String, default: "player" },
   doctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor" }, // Array of linked doctors one to many
   comments: [

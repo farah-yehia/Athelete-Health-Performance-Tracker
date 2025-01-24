@@ -23,6 +23,7 @@ import MyTeam from "./Components/MyTeam/MyTeam";
 import Doctors from "./Components/Doctors/Doctors";
 import Logout from "./Components/Logout/Logout";
 import Loader from "./Components/Loader/Loader";
+import TeamDetails from "./Components/TeamDetails/TeamDetails";
 import {
   getCookie,
   deleteCookie,
@@ -30,6 +31,24 @@ import {
 } from "./Components/Cookie/Cookie";
 
 export const currentUserContext = React.createContext();
+  
+const fetchLeagues = async (setLoading, setData, team) => {
+  setLoading(true);
+  try {
+    const encodedTeam = encodeURIComponent(team); // Encode the team name
+    const response = await axios.get(
+      `${Back_Origin}/api/teams?team=${encodedTeam}`
+    );
+    const players = response.data?.players || []; // Adjust based on response structure
+    setData(players);
+    console.log(`Fetched players for ${team}:`, players);
+  } catch (error) {
+    console.error("Error fetching players by team:", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 function App() {
   const [showHeaderAndFooter, setShowHeaderAndFooter] = useState(true);
@@ -40,55 +59,18 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Helper function to generate random values within a range
-  const getRandomValue = (min, max) =>
-    Math.floor(Math.random() * (max - min + 1)) + min;
+
 
   // Fetch league data
   useEffect(() => {
-    const fetchLeagues = async () => {
-      setLoading(true); // Start loading indicator
-      try {
-        // Fetch data from the backend
-        const response = await axios.get(`${Back_Origin}/api/leagues`);
-
-        // Validate and structure the data
-        const leagues =
-          response.data?.data?.map((league) => ({
-            id: league.id || "N/A", // Fallback to "N/A" if ID is missing
-            name: league.name || "Unknown League", // Default name if missing
-            logo:
-              league.logo_path ||
-              league.logo ||
-              "../public/default-player-image.png", // Serve a local fallback image
-            number: league.number || "N/A",
-            height:  getRandomValue(165, 190),
-            weight: getRandomValue(70, 90),
-            team: league.team || "Unknown Team",
-            distance: league.distance || "N/A",
-            img: league.img || "../public/default-player-image.png", // Use a public path for fallback image
-          })) || [];
-
-        // Update state with fetched data
-        setData(leagues);
-
-        // Log the result for debugging
-        console.log("Fetched leagues:", leagues);
-      } catch (error) {
-        console.error(
-          "Error fetching leagues:",
-          error.response?.data || error.message
-        );
-
-        // Show an error notification
-        toast.error("Failed to fetch league data. Please try again later.");
-      } finally {
-        setLoading(false); // Stop loading indicator
-      }
-    };
-
-    fetchLeagues();
+    fetchLeagues(setLoading,setData,"Man City");
   }, [Back_Origin]); // Dependency array includes Back_Origin to refetch if it changes
+
+
+
+
+
+  
 
   // Show/hide header and footer dynamically
   useEffect(() => {
@@ -184,13 +166,26 @@ logoutUser()
                   </ProtectedRoute>
                 }
               />
-              <Route path="/teams" element={<Teams data={data} />} />
               <Route
-                path="/my-team"
+                path="/teams"
                 element={
-                  <ProtectedRoute role="doctor">
-                    <MyTeam />
-                  </ProtectedRoute>
+                  <Teams
+                    data={data}
+                    fetchLeagues={fetchLeagues}
+                    setData={setData}
+                    setLoading={setLoading}
+                  />
+                }
+              />
+              <Route
+                path="/teams/:team"
+                element={
+                  <TeamDetails
+                    fetchLeagues={fetchLeagues}
+                    setLoading={setLoading}
+                    setData={setData}
+                    data={data}
+                  />
                 }
               />
               <Route

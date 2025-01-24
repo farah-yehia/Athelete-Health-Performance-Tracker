@@ -26,7 +26,7 @@ const Header = () => {
 
   // Define pages and filter dynamically based on authentication and role
   const allPages = [
-    { name: "Players", to: "/teams", auth: false },
+    { name: "Teams", to: "/teams", auth: false },
     { name: "Doctors", to: "/doctors", auth: true, role: ["admin"] },
     { name: "Profile", to: "/profile", auth: true },
     { name: "Login", to: "/login", auth: false },
@@ -35,7 +35,7 @@ const Header = () => {
 
   const menuPages = allPages.filter((page) => {
     // "Teams" is public for everyone
-    if (page.name === "Players") return true;
+    if (page.name === "Teams") return true;
 
     if (!isAuthenticated && !page.auth) return true;
 

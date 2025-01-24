@@ -11,6 +11,8 @@ const limiter = rateLimit({
     max: 100000,
     message: "Too many requests from this IP, please try again after 15 minutes",
 });
+
+
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
@@ -31,10 +33,13 @@ app.use(
 // Importing routers
 const AdminRouter = require("./router/AdminRouter");
 const DoctorRouter = require("./router/DoctorRouter");
+const PlayerModel = require("./controller/Player"); 
+
 
 // Linking routers to the app
 app.use(AdminRouter);
 app.use(DoctorRouter);
+app.use(PlayerModel)
 
 
 // //for testing
