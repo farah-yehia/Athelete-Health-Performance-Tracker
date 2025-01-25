@@ -60,3 +60,15 @@
   width: 120px;
   height: 70px;
 }
+/* Responsive Media Queries */
+
+/* 1004px and below */
+@media (max-width: 1004px) and (min-width: 768px) {
+
+.football-icon {
+  display: none;
+}
+
+
+}
+

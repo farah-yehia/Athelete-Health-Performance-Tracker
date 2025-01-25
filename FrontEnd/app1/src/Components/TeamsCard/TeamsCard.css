@@ -1,37 +1,58 @@
-/* Card container */
-.player-card {
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 15px;
+/* Card Container */
+.teams-card {
+    background: linear-gradient(145deg, #e0a800, #b4182d);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    max-width: 280px;
+    margin: 15px;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: "Roboto", sans-serif;
+    overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.player-card:hover {
+.teams-card:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Player image */
-.player-image {
+/* Card Image */
+.card-image img {
     width: 100%;
-    height: auto;
-    max-height: 150px;
-    border-radius: 50%;
+    height: 190px;
     object-fit: cover;
+    border-radius: 12px;
 }
 
-/* Player details */
-.player-info h3 {
-    margin: 10px 0;
-    font-size: 18px;
-    color: #333;
+/* Card Body */
+.card-body {
+    text-align: left;
 }
 
-.player-info p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #555;
+.card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-transform: capitalize;
+}
+
+/* Labels */
+.label {
+    font-weight: 700;
+    color: #ffc107;
+}
+
+/* Data Text */
+p {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+/* Last Updated Text */
+.last-updated {
+    font-size: 1rem;
+    font-style: italic;
+    margin-top: 10px;
 }

@@ -34,7 +34,9 @@ const TeamDetails = () => {
 
   return (
     <div className="team-details-container">
-      <h2>Players of {team}</h2>
+      <h2>
+        Players of <span> {team}</span>
+      </h2>
       {loading && <p>Loading players...</p>}
       {error && <p className="error-message">{error}</p>}
       <div className="players-list">

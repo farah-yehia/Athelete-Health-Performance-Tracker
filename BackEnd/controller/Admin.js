@@ -248,13 +248,14 @@ const fetchLeagues = async (req, res) => {
       lastUpdated: Date.now(),
       heartRate: Math.random().toFixed(2),
       comments: [],
-      age: Math.random().toFixed(0),
+      age:  Math.floor(Math.random() * (40 - 18 + 1)) + 18,
       img: player.photo
         ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${
             player.photo.split(".")[0]
           }.png`
         : "/default-player-image.png",
     }));
+    
 
     console.log(players); // Verify the data
 

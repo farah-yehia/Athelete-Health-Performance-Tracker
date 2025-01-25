@@ -10,8 +10,8 @@ const playerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   id: { type: String, required: true },
   number: { type: String, required: true },
-  weight: { type: String, required: true },
-  height: { type: String, required: true },
+  weight: { type: Number, required: true },
+  height: { type: Number, required: true },
   age: { type: Number, required: true },
   team: { type: String}, // Team name
   img: { type: String, default: "" },
