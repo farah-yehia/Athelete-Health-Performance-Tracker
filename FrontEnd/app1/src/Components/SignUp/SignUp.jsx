@@ -18,7 +18,7 @@ import { currentUserContext } from "../../App.jsx";
 import { Back_Origin } from "../../Front_ENV.jsx";
 import { setCookie } from "../Cookie/Cookie.jsx";
 import { jwtDecode } from "jwt-decode";
-
+import "./SignUp.css"
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -126,21 +126,25 @@ const handleSubmit = async (e) => {
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        maxWidth: "50%",
+        maxWidth: "35%",
         margin: "auto",
         padding: "30px",
         borderRadius: "9px",
         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        "@media (max-width: 880px)": {
+          padding: "40px",
+          borderRadius: "8px",
+          width: " 50% !important",
+        },
       }}
     >
       <Typography
         variant="h5"
         gutterBottom
         sx={{
-          fontSize: "1.5em",
-          fontWeight: "bolder",
+          fontSize: "27px !important",
           color: "#b4182d",
-          textAlign: "center",
+          fontFamily: "fantasy !important",
         }}
       >
         Sign Up

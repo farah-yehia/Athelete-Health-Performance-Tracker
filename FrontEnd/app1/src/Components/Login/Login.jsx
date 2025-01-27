@@ -120,9 +120,17 @@ const Login = () => {
           margin: "auto",
           padding: "30px",
           borderRadius: "9px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+          "@media (max-width: 880px)": {
+            padding: "40px",
+            borderRadius: "8px",
+            width: " 50% !important",
+          },
         }}
       >
-        <h4 className="mb-3" style={{ color: " #b4182d" }}>
+        <h4 className="mb-3" style={{ color: " #b4182d" , fontFamily: "fantasy",
+    fontWeight: "lighter"
+ }}>
           Login to your account
         </h4>
         <form onSubmit={handleSubmit}>
