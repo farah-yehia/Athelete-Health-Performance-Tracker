@@ -26,6 +26,9 @@ router.post('/admins/login',controller.loginAdmin);
 router.post('/admins/logout',controller.logout);
 //fetchLeagues
 // router.get("/api/leagues",controller.fetchLeagues);
-
-
+router.post("/resetPassword/:token", controller.resetPassword); // verified front and back
+router.post('/verifyResetToken/:token', controller.verifyResetToken); // verified front and back
+// User updates for Admin and Doctor roles
+router.put("/updateUserAdmin/:id", verifyToken("admin"), controller.updateUser);
+router.put("/updateUser/:id", verifyToken("doctor"), controller.updateUser);
 module.exports = router;

@@ -29,13 +29,12 @@ const playerSchema = new mongoose.Schema({
   ], //section where doctors can leave notes
 });
 const Player = mongoose.model("Player", playerSchema);
-// Doctor Schema
 const doctorSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // Doctor's name
+  name: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  id: { type: String, required: true },
-  contactNumber: { type: String, required: true }, // Doctor's phone number
+  id: { type: String, required: true, unique: true },
+  contactNumber: { type: String, required: true },
   availability: {
     days: [
       {
@@ -51,8 +50,10 @@ const doctorSchema = new mongoose.Schema({
         ],
       },
     ],
-    time: { start: { type: String }, end: { type: String } }, // Time range the doctor is available
+    time: { start: { type: String }, end: { type: String } },
   },
+  resetPasswordToken: { type: String }, // Moved to root level
+  resetPasswordExpires: { type: Date }, // Moved to root level
   role: { type: String, default: "doctor" },
 });
 const Doctor = mongoose.model("Doctor", doctorSchema);
@@ -61,8 +62,10 @@ const adminSchema = new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  id: { type: String, required: true },
-  role: { type: String, default: "admin" }, // Role can be used for access control
+  id: { type: String, required: true, unique: true },
+  role: { type: String, default: "admin" },
+  resetPasswordToken: { type: String }, // Token for password reset
+  resetPasswordExpires: { type: Date }, // Expiration time for token
 });
 const Admin = mongoose.model("Admin", adminSchema);
 // Export the models

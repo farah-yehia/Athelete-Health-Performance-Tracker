@@ -1,0 +1,69 @@
+.profile-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f8f8f8;
+}
+
+.profile-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    background: #e0e0e0eb;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.profile-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.profile-avatar {
+    width: 160px;
+    height: 160px;
+}
+
+.profile-role {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.ProfileEditButton,
+.ProfileSaveButton {
+    padding: 8px 20px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    transition: 0.3s ease;
+    color: black;
+        background-color: #ffffff;
+        margin-top: 15px;
+        border-color: white;
+}
+
+.ProfileEditButton:hover,
+.ProfileSaveButton:hover {
+    background: #b4182d;
+    color: #fff;
+    border-color: #b4182d;
+}
+
+@media (max-width: 768px) {
+    .profile-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+    }
+
+    .ProfileEditButton,
+    .ProfileSaveButton {
+        width: 100%;
+        font-size: 1rem;
+    }
+}

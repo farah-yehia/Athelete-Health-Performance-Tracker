@@ -2,36 +2,36 @@ import React, { useState, useContext } from "react";
 import {
   TextField,
   Button,
-  Radio,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormLabel,
   RadioGroup,
   FormControlLabel,
-  FormControl,
-  FormLabel,
-  Typography,
+  Radio,
   Box,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormGroup,
-  Checkbox,
+  Typography,
 } from "@mui/material";
-import { Back_Origin } from "../../Front_ENV.jsx";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { currentUserContext } from "../../App.jsx";
+import { Back_Origin } from "../../Front_ENV.jsx";
+import { setCookie } from "../Cookie/Cookie.jsx";
+import { jwtDecode } from "jwt-decode";
+
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { showMessage } = useContext(currentUserContext);
+  const { setCurrentUser, setIsAuthenticated, showMessage } =
+    useContext(currentUserContext);
 
   const [formData, setFormData] = useState({
     name: "",
     username: "",
     password: "",
     confirmPassword: "",
-    role: "", // Default to doctor
-    id: "",
+    role: "",
     contactNumber: "",
-    availability: "",
   });
 
   const [gender, setGender] = useState("");
@@ -44,135 +44,103 @@ const SignUp = () => {
     setErrors({ ...errors, [name]: "" });
   };
 
-  const handleGenderChange = (e) => {
-    setGender(e.target.value);
-  };
-
   const handleRoleChange = (e) => {
     setFormData({ ...formData, role: e.target.value });
+    setErrors((prev) => ({ ...prev, role: "" }));
+  };
+
+  const handleGenderChange = (e) => {
+    setGender(e.target.value);
+    setErrors((prev) => ({ ...prev, gender: "" }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-
-    // General validations
-    if (!formData.name.trim() || formData.name.length < 3) {
-      newErrors.name = "Name must be at least 3 characters long";
-    }
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required";
-    }
-    if (!formData.password.trim() || formData.password.length < 6) {
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.username.trim()) newErrors.username = "Username is required";
+    if (!formData.password.trim() || formData.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords must match";
+    if (!formData.role) newErrors.role = "Role is required";
+    if (formData.role === "doctor") {
+      if (!formData.contactNumber.trim())
+        newErrors.contactNumber = "Contact number is required";
     }
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    // Role-specific validations
-    if (!formData.role) {
-      newErrors.role = "Role is required";
-    } else if (formData.role === "doctor") {
-      if (!formData.id.trim()) {
-        newErrors.id = "ID is required for doctors";
-      }
-      if (!formData.contactNumber.trim()) {
-        newErrors.contactNumber = "Contact number is required for doctors";
-      }
-    } else if (formData.role === "admin") {
-      if (!formData.id.trim()) {
-        newErrors.id = "ID is required for admins";
-      }
-    }
-
-    // Gender validation
-    if (!gender) {
-      newErrors.gender = "Gender is required";
-    }
-
+    if (!gender) newErrors.gender = "Gender is required";
     return newErrors;
   };
 
-const handleCheckboxChange = (event) => {
-  const { value, checked } = event.target;
-  setFormData((prev) => {
-    if (checked) {
-      // Add day if checkbox is checked
-      return { ...prev, availability: [...prev.availability, value] };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const formErrors = validateForm();
+  if (Object.keys(formErrors).length > 0) {
+    setErrors(formErrors);
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const endpoint =
+      formData.role === "admin" ? "admins/signup" : "doctors/signup";
+
+    const response = await fetch(`${Back_Origin}/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        gender,
+      }),
+    });
+
+    const data = await response.json();
+    console.log(data)
+    setLoading(false);
+
+    if (response.ok) {
+      if (!data.error) {
+        showMessage(data.message, false);
+        setCookie("token", data.data);
+        setIsAuthenticated(true);
+        setCurrentUser(jwtDecode(data.data));
+     
+      } else {
+        showMessage(data.error, true); // If there's an error in the response
+        setIsAuthenticated(false);
+      }
     } else {
-      // Remove day if checkbox is unchecked
-      return {
-        ...prev,
-        availability: prev.availability.filter((day) => day !== value),
-      };
+      setIsAuthenticated(false);
     }
-  });
+  } catch (error) {
+    setLoading(false);
+   
+    setIsAuthenticated(false);
+  }
+     navigate("/login");
 };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const endpoint =
-        formData.role === "admin" ? "admins/signup" : "signup";
-
-      const response = await fetch(`${Back_Origin}/${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          gender,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server Error:", errorData);
-        showMessage(errorData.message || "Error creating account.", true);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Success:", data);
-      showMessage("Account created successfully!", false);
-      navigate("/login");
-    } catch (error) {
-      console.error("Network Error:", error);
-      showMessage("Error creating account. Please try again.", true);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        maxWidth:"50%",
+        maxWidth: "50%",
         margin: "auto",
-        marginBottom:"60px !important",
-        marginTop:"60px !important",
         padding: "30px",
         borderRadius: "9px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
       }}
     >
       <Typography
         variant="h5"
         gutterBottom
-        style={{
-          fontSize: " 1.5em !important",
-          fontFamily: "Oswald",
+        sx={{
+          fontSize: "1.5em",
           fontWeight: "bolder",
+          color: "#b4182d",
+          textAlign: "center",
         }}
       >
         Sign Up
@@ -223,107 +191,58 @@ const handleCheckboxChange = (event) => {
         error={!!errors.confirmPassword}
         helperText={errors.confirmPassword}
       />
+
       <FormControl fullWidth margin="normal">
-        <InputLabel id="role-label">Role</InputLabel>
+        <InputLabel>Role</InputLabel>
         <Select
-          labelId="role-label"
           value={formData.role}
           onChange={handleRoleChange}
           name="role"
           required
+          error={!!errors.role}
         >
-          <MenuItem value="doctor">doctor</MenuItem>
-          <MenuItem value="admin">admin</MenuItem>
+          <MenuItem value="doctor">Doctor</MenuItem>
+          <MenuItem value="admin">Admin</MenuItem>
         </Select>
       </FormControl>
+
       {formData.role === "doctor" && (
-        <>
-          <TextField
-            label="ID"
-            name="id"
-            value={formData.id}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            error={!!errors.id}
-            helperText={errors.id}
-          />
-          <TextField
-            label="Contact Number"
-            name="contactNumber"
-            value={formData.contactNumber}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            error={!!errors.contactNumber}
-            helperText={errors.contactNumber}
-          />
-          <FormControl component="fieldset" fullWidth margin="normal">
-            <FormLabel component="legend">Availability</FormLabel>
-            <FormGroup row>
-              {[
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-              ].map((day) => (
-                <FormControlLabel
-                  key={day}
-                  control={
-                    <Checkbox
-                      checked={formData.availability.includes(day)}
-                      onChange={handleCheckboxChange}
-                      value={day}
-                    />
-                  }
-                  label={day}
-                />
-              ))}
-            </FormGroup>
-          </FormControl>
-        </>
-      )}
-      {formData.role === "admin" && (
         <TextField
-          label="ID"
-          name="id"
-          value={formData.id}
+          label="Contact Number"
+          name="contactNumber"
+          value={formData.contactNumber}
           onChange={handleChange}
           fullWidth
           margin="normal"
           required
-          error={!!errors.id}
-          helperText={errors.id}
+          error={!!errors.contactNumber}
+          helperText={errors.contactNumber}
         />
       )}
-      <FormControl
-        component="fieldset"
-        margin="normal"
-        required
-        error={!!errors.gender}
-      >
-        <FormLabel component="legend">Gender</FormLabel>
-        <RadioGroup value={gender} onChange={handleGenderChange} row>
+
+      <FormControl component="fieldset" fullWidth margin="normal" required>
+        <FormLabel>Gender</FormLabel>
+        <RadioGroup row value={gender} onChange={handleGenderChange}>
           <FormControlLabel value="Male" control={<Radio />} label="Male" />
           <FormControlLabel value="Female" control={<Radio />} label="Female" />
         </RadioGroup>
       </FormControl>
+
+      {errors.gender && (
+        <Typography color="error" variant="body2">
+          {errors.gender}
+        </Typography>
+      )}
+
       <Button
         variant="contained"
         type="submit"
         fullWidth
         disabled={loading}
         sx={{
-          backgroundColor: "black",
+          backgroundColor: "#b4182d",
           color: "white",
-          "&:hover": {
-            backgroundColor: "#b4182d",
-          },
+          "&:hover": { backgroundColor: "black" },
         }}
       >
         {loading ? "Signing Up..." : "Sign Up"}

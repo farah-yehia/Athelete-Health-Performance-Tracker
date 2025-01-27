@@ -81,7 +81,7 @@ h4 {
 h5 {
   font-size:1.25em !important;
   font-family: 'Oswald', sans-serif;
-    color: #fff !important;
+    
 }
 
 h6 {
@@ -189,7 +189,7 @@ background-color: #aebfd4;
 border-radius: thin;
 }
 .body-container{
-  background-color:#aebfd4;
+  background-color:#f1f1f1;;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -201,5 +201,5 @@ border-radius: thin;
   flex-grow: 1; /* Allows the main content to fill remaining space */
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden !important;
 }

@@ -145,6 +145,7 @@ logoutUser()
         isAuthenticated,
         setIsAuthenticated,
         logoutUser,
+        setLoading
       }}
     >
       <div className="body-container">

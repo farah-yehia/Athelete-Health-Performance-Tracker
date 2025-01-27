@@ -1,11 +1,11 @@
 const { Admin, Doctor, Player } = require("../db/Database");
-const { v4 } = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const ENV = require("../env");
 const axios = require("axios");
-const { API_KEY } = require("../env");
+const { Secret_Key } = require("../env");
 // Function to add a Admin
 const getAdmin = async (req, res, next) => {
   try {
@@ -29,14 +29,14 @@ const deleteAdmin = async (req, res, next) => {
     const admin = await Admin.findOneAndDelete({ id: id });
 
     if (!admin) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "admin not found" });
     }
     res
       .status(200)
       .json({ message: `Admin (${admin.name}) deleted successfully` });
   } catch (error) {
     res.status(500).json({ error: "Unexpected Error Occurred" });
-    next(`ERROR IN: deleteUser function => ${error}`);
+    next(`ERROR IN: deleteadmin function => ${error}`);
   }
 };
 
@@ -49,15 +49,15 @@ const editAdmin = async (req, res, next) => {
     if (!admin) {
       return res.status(404).json({ error: "Admin not found" });
     }
-    const checkUsername = await Admin.findOne({ username: sentAdmin.username });
-    if (checkUsername && checkUsername.id !== id) {
-      return res.status(404).json({ error: "Username already exists" });
+    const checkusername = await Admin.findOne({ username: sentAdmin.username });
+    if (checkusername && checkusername.id !== id) {
+      return res.status(404).json({ error: "username already exists" });
     }
     admin.name = sentAdmin.name;
     admin.username = sentAdmin.username;
     admin.role = sentAdmin.role;
     await admin.save();
-    const token = await jwt.sign(sentAdmin, ENV.Secret_Key);
+    const token = await jwt.sign(sentAdmin, Secret_Key);
 
     res.status(201).json({
       message: `admin (${admin.name}) updated successfully`,
@@ -71,13 +71,9 @@ const editAdmin = async (req, res, next) => {
 
 //Function to allow a Admin to create an account (signup)
 const signupAdmin = async (req, res, next) => {
-  const validAdminIDs = ["ADMIN123", "SUPERADMIN456", "30705020901981"];
-  // Check if the provided adminID is valid
-
   try {
-    const { name, username, password, role, id } = req.body;
-    console.log(req.body);
-    // const id = v4();
+    const { name, username, password, role } = req.body;
+
     if (!validator.isLength(name, { min: 3 })) {
       return res
         .status(400)
@@ -87,39 +83,36 @@ const signupAdmin = async (req, res, next) => {
       return res.status(400).json({ error: "Username must be alphanumeric" });
     }
     if (!validator.isStrongPassword(password, { minLength: 8 })) {
-      return res
-        .status(400)
-        .json({
-          error: "Password must be strong and at least 8 characters long",
-        });
-    }
-    if (!["admin", "doctor", "player"].includes(role)) {
-      return res.status(400).json({ error: "Invalid role" });
-    }
-    if (await Admin.findOne({ username: username })) {
-      return res.status(400).json({ error: "Username already exists" });
+      return res.status(400).json({
+        error: "Password must be strong and at least 8 characters long",
+      });
     }
     if (role !== "admin") {
       return res.status(400).json({ error: "Only admin role allowed here" });
     }
-    if (!validAdminIDs.includes(id)) {
-      return res.status(403).json({ message: "Unauthorized admin ID" });
+
+    const existingAdmin = await Admin.findOne({ username });
+    if (existingAdmin) {
+      return res.status(400).json({ error: "Username already exists" });
     }
+    const adminId = uuidv4();
     const hashedPassword = await bcrypt.hash(password, 10);
     const newAdmin = new Admin({
       name,
-      id,
+      id: adminId,
       username,
       password: hashedPassword,
       role,
     });
+
     await newAdmin.save();
+    console.log(newAdmin);
     res
       .status(201)
       .json({ message: "Admin created successfully", data: newAdmin });
   } catch (error) {
-    res.status(400).json({ error: "Unexpected Error Occurred" });
-    next(`ERROR IN: signup function => ${error}`);
+    res.status(500).json({ error: "Unexpected Error Occurred" });
+    next(`ERROR IN: signupAdmin function => ${error.message}`);
   }
 };
 
@@ -128,6 +121,7 @@ const loginAdmin = async (req, res, next) => {
   try {
     console.log("req is => ", req.body);
     const { username, password } = req.body;
+    console.log(username);
     // Validate the username
     if (!username || !validator.isAlphanumeric(username)) {
       return res.status(400).json({ error: "Valid username is required" });
@@ -149,10 +143,12 @@ const loginAdmin = async (req, res, next) => {
           username: admin.username,
           role: admin.role,
           password: admin.password,
+          id: admin.id,
         },
-        ENV.Secret_Key,
+        Secret_Key,
         { expiresIn: "1h" }
       );
+      console.log(admin);
       res.status(201).json({ message: `Welcome ${admin.name}`, data: token });
     }
   } catch (error) {
@@ -248,14 +244,13 @@ const fetchLeagues = async (req, res) => {
       lastUpdated: Date.now(),
       heartRate: Math.random().toFixed(2),
       comments: [],
-      age:  Math.floor(Math.random() * (40 - 18 + 1)) + 18,
+      age: Math.floor(Math.random() * (40 - 18 + 1)) + 18,
       img: player.photo
         ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${
             player.photo.split(".")[0]
           }.png`
         : "/default-player-image.png",
     }));
-    
 
     console.log(players); // Verify the data
 
@@ -265,6 +260,159 @@ const fetchLeagues = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch player data." });
   }
 };
+const verifyResetToken = async (req, res, next) => {
+  try {
+    const token = req.params.token || req.headers["authorization"];
+    const { role } = req.body;
+
+    if (!token) {
+      return res
+        .status(400)
+        .json({ error: "Password reset token is required." });
+    }
+
+    if (!role) {
+      return res.status(400).json({ error: "Role is required." });
+    }
+
+    const Model = role === "admin" ? Admin : Doctor;
+
+ const adm = await Model.findOne({
+   resetPasswordToken: token,
+   resetPasswordExpires: { $gt: Date.now() },
+ });
+ const doc = await Model.findOne({
+   "availability.resetPasswordToken": token,
+   "availability.resetPasswordExpires": { $gt: Date.now() },
+ });
+
+    if (!adm && !doc) {
+      return res.status(400).json({ error: "Invalid or expired token." });
+    }
+
+    res.status(200).json({ message: "Password reset token is valid." });
+  } catch (error) {
+    console.error("Error in verifyResetToken:", error);
+    res.status(500).json({ error: "Unexpected error occurred." });
+    next(`ERROR IN: verifyResetToken function => ${error}`);
+  }
+};
+const resetPassword = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ message: "Token not provided" });
+    }
+
+    const secretKey = Secret_Key;
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secretKey);
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({ message: "Token expired" });
+      }
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    // Extract the necessary fields from the request body
+    const { oldpassword, newpassword, role } = req.body;
+
+    if (!decoded.id || !role || !newpassword) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    let userModel;
+    if (role === "admin") {
+      userModel = Admin;
+    } else if (role === "doctor") {
+      userModel = Doctor;
+    } else {
+      return res.status(400).json({ message: "Invalid role specified" });
+    }
+
+    // Query user based on the custom `id` field
+    const user = await userModel.findOne({ id: decoded.id });
+
+    console.log(user); // Debugging user data
+
+    if (!user) {
+      return res.status(404).json({ message: `${role} not found` });
+    }
+
+    // Validate old password
+  
+    const isMatch = await bcrypt.compare(oldpassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    // Hash and update the password
+    const hashedPassword = await bcrypt.hash(newpassword, 10);
+    user.password = hashedPassword;
+
+    // Clear any reset token and expiration if previously set
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    // Save updated user data
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Use custom `id` field
+    const { role } = req.user; // Role from the authenticated user token
+    const { name, username, password, contactNumber, availability } = req.body;
+
+    // Determine which model to use based on role
+    const UserModel = role === "admin" ? Admin : Doctor;
+
+    const user = await UserModel.findOne({ id }); // Query using `id`
+
+    if (!user) {
+      return res.status(404).json({ error: `${role} not found` });
+    }
+
+    // Update user details
+    if (name) user.name = name;
+    if (username) {
+      const existingUser = await UserModel.findOne({ username });
+      if (existingUser && existingUser.id !== id) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+      user.username = username;
+    }
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
+    if (contactNumber) user.contactNumber = contactNumber;
+    if (availability !== undefined) user.availability = availability;
+
+    // Save the updated user
+    await user.save();
+
+    // Return the updated user
+    const updatedUser = await UserModel.findOne({ id });
+    res.status(200).json({
+      message: `${role} (${user.name}) updated successfully`,
+      data: updatedUser, // Send the updated data
+    });
+  } catch (error) {
+    console.error("Error in updateUser:", error);
+    res.status(500).json({ error: "Unexpected error occurred" });
+  }
+};
+
 
 module.exports = {
   getAdmin,
@@ -280,4 +428,7 @@ module.exports = {
   updateDoctor,
   logout,
   fetchLeagues,
+  resetPassword,
+  verifyResetToken,
+  updateUser,
 };

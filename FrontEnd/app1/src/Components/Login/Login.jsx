@@ -74,9 +74,11 @@ const Login = () => {
       body: JSON.stringify(formData),
     });
 
+    
     if (adminResponse.ok) {
       // Admin login successful
       const data = await adminResponse.json();
+      console.log(jwtDecode(data.data))
       setLoader(false);
       if (!data.error) {
         showMessage(data.message, false);
@@ -120,7 +122,9 @@ const Login = () => {
           borderRadius: "9px",
         }}
       >
-        <h4 className="mb-3">Login to your account</h4>
+        <h4 className="mb-3" style={{ color: " #b4182d" }}>
+          Login to your account
+        </h4>
         <form onSubmit={handleSubmit}>
           {/* Username Field */}
           <TextField
@@ -211,10 +215,10 @@ const Login = () => {
             className="extraBold-text pascalCase-text"
             fullWidth
             sx={{
-              backgroundColor: "black",
+              backgroundColor: " #b4182d;",
               color: "white",
               "&:hover": {
-                backgroundColor: "#b4182d",
+                backgroundColor: "black",
               },
             }}
           >

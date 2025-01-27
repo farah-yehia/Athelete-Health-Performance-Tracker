@@ -3,8 +3,8 @@ const {
   addPlayerD,
   deletePlayerD,
   editPlayerD,
-  signupPlayer,
-  loginPlayer,
+  signupDoctor,
+  loginDoctor,
   logoutdoctor,
 } = require("../controller/Doctor");
 const verifyToken = require("../controller/VerifyToken");
@@ -21,8 +21,8 @@ router.delete(
 router.put("/edit-player-D/:playerId", verifyToken("doctor"), editPlayerD);
 
 // Doctor authentication routes
-router.post("/signup", signupPlayer);
-router.post("/login", loginPlayer);
+router.post("/doctors/signup", signupDoctor);
+router.post("/login", loginDoctor);
 router.post("/logout", logoutdoctor);
 
 module.exports = router;
