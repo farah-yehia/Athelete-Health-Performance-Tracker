@@ -5,7 +5,8 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const ENV = require("../env");
 const axios = require("axios");
-const { Secret_Key } = require("../env");
+const { Secret_Key } = require("../env"); 
+const mongoose=require("mongoose");
 // Function to add a Admin
 const getAdmin = async (req, res, next) => {
   try {
@@ -196,35 +197,134 @@ const updatePlayer = async (req, res) => {
   }
 };
 
-// Doctor CRUD operations
+const doctors = [
+  {
+    id: "1",
+    name: "Dr. Alice Smith",
+    username: "alice.smith",
+    password: "hashed_password", // Ensure to hash this
+    contactNumber: "123-456-7890",
+    availability: {
+      days: ["Monday", "Wednesday"],
+      time: { start: "09:00", end: "17:00" },
+    },
+  },
+  {
+    id: "2",
+    name: "Dr. John Doe",
+    username: "john.doe",
+    password: "hashed_password",
+    contactNumber: "987-654-3210",
+    availability: {
+      days: ["Tuesday", "Thursday"],
+      time: { start: "10:00", end: "18:00" },
+    },
+  },
+];
+
+
+const seedDatabase = async () => {
+  try {
+    await Doctor.deleteMany(); // Clear existing doctors
+    const saltRounds = 10;
+
+    // Use map + Promise.all to correctly hash passwords
+    const hashedDoctors = await Promise.all(
+      doctors.map(async (doctor) => ({
+        ...doctor,
+        password: await bcrypt.hash(doctor.password, saltRounds),
+      }))
+    );
+
+    await Doctor.insertMany(hashedDoctors);
+    console.log("Doctors added successfully!");
+  } catch (error) {
+    console.error("Error seeding doctors:", error);
+  }
+};
+
+// seedDatabase();
+
+
+//fetch all doctors
+
+const fetchDoctors = async (req, res) => {
+  try {
+    const doctors = await Doctor.find({});
+    console.log("*********************fetched*******************************")
+    res.json(doctors);
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+
 const addDoctor = async (req, res) => {
   try {
-    const doctor = new Doctor(req.body);
+    const { name, username, password, contactNumber, availability } = req.body;
+
+    // Check if a doctor with the same username already exists
+    const existingDoctor = await Doctor.findOne({ username });
+    if (existingDoctor) {
+      return res
+        .status(409)
+        .json({ error: "Doctor with the same username already exists" });
+    }
+
+    // Create a new doctor (let MongoDB generate the `_id`)
+    const doctor = new Doctor({
+      name,
+      username,
+      password,
+      contactNumber,
+      availability,
+    });
+
+    // Save the doctor to the database
     await doctor.save();
-    res.status(200).json(doctor);
+
+    // Return the created doctor with the `id` field
+    res.status(201).json({ ...doctor.toObject(), id: doctor._id });
   } catch (error) {
-    res.status(400).json(`ERROR IN: addDoctor function => ${error}`);
+    console.error("Error adding doctor:", error);
+    res.status(400).json({ error: "Failed to add doctor" });
   }
 };
-
 const deleteDoctor = async (req, res) => {
   try {
-    const doctorId = req.params.doctorId;
-    await Doctor.findByIdAndDelete(doctorId);
+    const doctorId = req.params.id;
+    const doctor = await Doctor.findOneAndDelete({ _id: doctorId }); // Query by `_id`
+
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
     res.status(200).json({ message: "Doctor deleted successfully" });
   } catch (error) {
-    res.status(400).json(`ERROR IN: deleteDoctor function => ${error}`);
+    console.error("Error deleting doctor:", error);
+    res.status(400).json({ error: "Failed to delete doctor" });
   }
 };
-
 const updateDoctor = async (req, res) => {
   try {
-    const doctorId = req.params.doctorId;
-    const updatedDoctor = req.body;
-    await Doctor.findByIdAndUpdate(doctorId, updatedDoctor, { new: true });
-    res.status(200).json(updatedDoctor);
+    const doctorId = req.params.id;
+    const updatedDoctor = await Doctor.findOneAndUpdate(
+      { _id: doctorId }, // Query by `_id`
+      req.body,
+      { new: true, runValidators: true } // Return the updated document
+    );
+
+    if (!updatedDoctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    res
+      .status(200)
+      .json({ ...updatedDoctor.toObject(), id: updatedDoctor._id });
   } catch (error) {
-    res.status(400).json(`ERROR IN: updateDoctor function => ${error}`);
+    console.error("Error updating doctor:", error);
+    res.status(400).json({ error: "Failed to update doctor" });
   }
 };
 const FPL_API_URL = "https://fantasy.premierleague.com/api/bootstrap-static/";
@@ -431,4 +531,5 @@ module.exports = {
   resetPassword,
   verifyResetToken,
   updateUser,
+  fetchDoctors  
 };

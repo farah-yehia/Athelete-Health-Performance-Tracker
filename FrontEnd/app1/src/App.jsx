@@ -31,7 +31,7 @@ import {
 } from "./Components/Cookie/Cookie";
 
 export const currentUserContext = React.createContext();
-  
+
 const fetchLeagues = async (setLoading, setData, team) => {
   setLoading(true);
   try {
@@ -49,6 +49,27 @@ const fetchLeagues = async (setLoading, setData, team) => {
   }
 };
 
+const fetchDoctors = async (setLoading, setDoctors) => {
+  const token = getCookie("token");
+  if (!token) {
+    console.error("No token found. Please log in.");
+    return;
+  }
+  setLoading(true);
+  try {
+    const response = await axios.get(`${Back_Origin}/fetchDoctors`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setDoctors(response.data);
+    console.log(`Fetched doctors are :`, response.data);
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
 function App() {
   const [showHeaderAndFooter, setShowHeaderAndFooter] = useState(true);
@@ -56,61 +77,34 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState({});
   const [data, setData] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
-
-
-  // Fetch league data
   useEffect(() => {
-    fetchLeagues(setLoading,setData,"Man City");
-  }, [Back_Origin]); // Dependency array includes Back_Origin to refetch if it changes
+    fetchDoctors(setLoading, setDoctors);
+  }, []);
 
-
-
-
-
-  
-
-  // Show/hide header and footer dynamically
   useEffect(() => {
-    const noHeaderFooterRoutes = ["/login", "/signup"];
-    setShowHeaderAndFooter(!noHeaderFooterRoutes.includes(location.pathname));
-  }, [location.pathname]);
+    fetchLeagues(setLoading, setData, "Man City");
+  }, []);
 
-  // Handle authentication state
-useEffect(() => {
-  let token = getCookie("token");
-  if (isAuthenticated) {
-    try {
-      if (token) {
+  useEffect(() => {
+    const token = getCookie("token");
+    if (token) {
+      try {
         const decodedUser = jwtDecode(token);
         setCurrentUser(decodedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Invalid token:", error);
+        logoutUser();
       }
-      const interval = setInterval(() => {
-        token = getCookie("token");
-        if (!token) {
-          logoutUser();
-        } else {
-          if (checkCookieExpiry("token")) {
-            logoutUser();
-          }
-        }
-      }, 1000);
-      return () => clearInterval(interval);
-    } catch (error) {
-      console.error("Invalid token:", error);
-      logoutUser();
+    } else {
+      setIsAuthenticated(false);
     }
-  }
-  else{
-logoutUser()
+  }, []);
 
-  }
-}, [isAuthenticated]);
-
-
-  // Logout function
   const logoutUser = async () => {
     try {
       await axios.post(`${Back_Origin}/admins/logout`);
@@ -145,7 +139,9 @@ logoutUser()
         isAuthenticated,
         setIsAuthenticated,
         logoutUser,
-        setLoading
+        setLoading,
+        loading,
+        doctors
       }}
     >
       <div className="body-container">
@@ -193,7 +189,7 @@ logoutUser()
                 path="/doctors"
                 element={
                   <ProtectedRoute role="admin">
-                    <Doctors />
+                    <Doctors  />
                   </ProtectedRoute>
                 }
               />

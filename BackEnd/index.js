@@ -26,7 +26,7 @@ app.use(
         origin: ENV.Front_Origin, // Allow all origins during development
         methods: "GET,HEAD,PUT,POST,DELETE",
         credentials: true,
-        // allowedHeaders: ["Content-Type", "Authorization"],
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
 

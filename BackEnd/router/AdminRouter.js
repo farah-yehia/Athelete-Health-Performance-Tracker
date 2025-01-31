@@ -12,6 +12,8 @@ router.delete("/players/:playerId", verifyToken("admin"), controller.deletePlaye
 router.put("/players/:playerId", verifyToken("admin"), controller.updatePlayer);
 
 // Routes for Doctor functionalities
+
+router.get("/fetchDoctors",controller.fetchDoctors);
 router.post("/doctors", verifyToken("admin"), controller.addDoctor);
 router.delete("/doctors/:doctorId", verifyToken("admin"), controller.deleteDoctor);
 router.put("/doctors/:doctorId", verifyToken("admin"), controller.updateDoctor);
