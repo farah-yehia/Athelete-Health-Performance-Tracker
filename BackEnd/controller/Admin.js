@@ -5,8 +5,8 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const ENV = require("../env");
 const axios = require("axios");
-const { Secret_Key } = require("../env"); 
-const mongoose=require("mongoose");
+const { Secret_Key } = require("../env");
+const mongoose = require("mongoose");
 // Function to add a Admin
 const getAdmin = async (req, res, next) => {
   try {
@@ -222,7 +222,6 @@ const doctors = [
   },
 ];
 
-
 const seedDatabase = async () => {
   try {
     await Doctor.deleteMany(); // Clear existing doctors
@@ -245,21 +244,18 @@ const seedDatabase = async () => {
 
 // seedDatabase();
 
-
 //fetch all doctors
 
 const fetchDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find({});
-    console.log("*********************fetched*******************************")
+    console.log("*********************fetched*******************************");
     res.json(doctors);
   } catch (error) {
     console.error("Error fetching doctors:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
-
-
+};
 const addDoctor = async (req, res) => {
   try {
     const { name, username, password, contactNumber, availability } = req.body;
@@ -272,29 +268,31 @@ const addDoctor = async (req, res) => {
         .json({ error: "Doctor with the same username already exists" });
     }
 
-    // Create a new doctor (let MongoDB generate the `_id`)
+    // Create a new doctor with a generated UUID for the external 'id' field
     const doctor = new Doctor({
       name,
       username,
       password,
       contactNumber,
       availability,
+      id: uuidv4(), // external unique identifier
     });
 
-    // Save the doctor to the database
     await doctor.save();
-
-    // Return the created doctor with the `id` field
-    res.status(201).json({ ...doctor.toObject(), id: doctor._id });
+    // Return the doctor as a plain object with an explicit id property
+    res.status(201).json({ ...doctor.toObject(), id: doctor.id });
   } catch (error) {
     console.error("Error adding doctor:", error);
     res.status(400).json({ error: "Failed to add doctor" });
   }
 };
+
 const deleteDoctor = async (req, res) => {
   try {
-    const doctorId = req.params.id;
-    const doctor = await Doctor.findOneAndDelete({ _id: doctorId }); // Query by `_id`
+    // Use the route parameter "doctorId"
+    const doctorId = req.params.doctorId;
+    // Find and delete by the external UUID field (doctor.id)
+    const doctor = await Doctor.findOneAndDelete({ id: doctorId });
 
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
@@ -306,22 +304,30 @@ const deleteDoctor = async (req, res) => {
     res.status(400).json({ error: "Failed to delete doctor" });
   }
 };
+
 const updateDoctor = async (req, res) => {
   try {
-    const doctorId = req.params.id;
+    // Use the route parameter "doctorId"
+    const doctorId = req.params.doctorId;
+    const updateData = { ...req.body };
+
+    // Remove password if empty to avoid triggering validation errors
+    if (!updateData.password || updateData.password.trim() === "") {
+      delete updateData.password;
+    }
+
+    // Update by matching the external UUID (doctor.id)
     const updatedDoctor = await Doctor.findOneAndUpdate(
-      { _id: doctorId }, // Query by `_id`
-      req.body,
-      { new: true, runValidators: true } // Return the updated document
+      { id: doctorId },
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    res
-      .status(200)
-      .json({ ...updatedDoctor.toObject(), id: updatedDoctor._id });
+    res.status(200).json({ ...updatedDoctor.toObject(), id: updatedDoctor.id });
   } catch (error) {
     console.error("Error updating doctor:", error);
     res.status(400).json({ error: "Failed to update doctor" });
@@ -377,14 +383,14 @@ const verifyResetToken = async (req, res, next) => {
 
     const Model = role === "admin" ? Admin : Doctor;
 
- const adm = await Model.findOne({
-   resetPasswordToken: token,
-   resetPasswordExpires: { $gt: Date.now() },
- });
- const doc = await Model.findOne({
-   "availability.resetPasswordToken": token,
-   "availability.resetPasswordExpires": { $gt: Date.now() },
- });
+    const adm = await Model.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+    const doc = await Model.findOne({
+      "availability.resetPasswordToken": token,
+      "availability.resetPasswordExpires": { $gt: Date.now() },
+    });
 
     if (!adm && !doc) {
       return res.status(400).json({ error: "Invalid or expired token." });
@@ -443,7 +449,7 @@ const resetPassword = async (req, res) => {
     }
 
     // Validate old password
-  
+
     const isMatch = await bcrypt.compare(oldpassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Old password is incorrect" });
@@ -466,7 +472,6 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const updateUser = async (req, res, next) => {
   try {
@@ -513,7 +518,6 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-
 module.exports = {
   getAdmin,
   deleteAdmin,
@@ -531,5 +535,5 @@ module.exports = {
   resetPassword,
   verifyResetToken,
   updateUser,
-  fetchDoctors  
+  fetchDoctors,
 };

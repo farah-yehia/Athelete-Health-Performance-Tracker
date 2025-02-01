@@ -1,3 +1,4 @@
+// components/Doctors.jsx
 import React, {
   useState,
   useEffect,
@@ -30,12 +31,7 @@ import { Back_Origin } from "../../Front_ENV";
 import { getCookie } from "../Cookie/Cookie";
 import { currentUserContext } from "../../App";
 
-const Doctors = ({
-  doctors: propDoctors,
-  loading: propLoading,
-  setDoctors,
-}) => {
-  const [localDoctors, setLocalDoctors] = useState([]);
+const Doctors = () => {
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -45,32 +41,32 @@ const Doctors = ({
   });
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  // Use the external UUID (doctor.id) for update/delete operations.
   const [currentDoctorId, setCurrentDoctorId] = useState(null);
 
-  const { showMessage, setLoading, doctors, loading } =
+  const { showMessage, setLoading, doctors, loading, setDoctors } =
     useContext(currentUserContext);
 
   useEffect(() => {
-    setLocalDoctors(propDoctors);
-  }, [propDoctors]);
+    // You can perform side-effects here if needed.
+  }, [doctors]);
 
   const handleOpen = useCallback((doctor = null) => {
     setEditMode(!!doctor);
     setFormData(
       doctor
         ? {
-            _id: doctor._id,
             name: doctor.name,
             username: doctor.username,
             password: "",
             contactNumber: doctor.contactNumber,
+            // Ensure that availability is always defined.
             availability: doctor.availability || {
               days: [],
               time: { start: "", end: "" },
             },
           }
         : {
-            _id: "",
             name: "",
             username: "",
             password: "",
@@ -78,7 +74,8 @@ const Doctors = ({
             availability: { days: [], time: { start: "", end: "" } },
           }
     );
-    setCurrentDoctorId(doctor ? doctor._id : null);
+    // Fix: use doctor?.id instead of undefined doctorId.
+    setCurrentDoctorId(doctor ? doctor.id : null);
     setOpen(true);
   }, []);
 
@@ -113,74 +110,65 @@ const Doctors = ({
       const method = editMode ? "put" : "post";
       const headers = { authorization: getCookie("token") || "" };
 
-      const response = await axios({ method, url, headers, data: formData });
-
-      if (response.data.error) {
-        showMessage(response.data.error, true);
-        return;
+      // If editing, remove password if empty to avoid validation errors.
+      const dataToSend = { ...formData };
+      if (
+        editMode &&
+        (!dataToSend.password || dataToSend.password.trim() === "")
+      ) {
+        delete dataToSend.password;
       }
 
-      setDoctors((prev) =>
-        editMode
-          ? prev.map((doctor) =>
-              doctor._id === currentDoctorId ? response.data : doctor
-            )
-          : [...prev, response.data]
-      );
-
-      showMessage("Doctor saved successfully", false);
+      const response = await axios({ method, url, headers, data: dataToSend });
+      // Update state immediately without a page refresh.
+      if (editMode) {
+        setDoctors((prev) =>
+          prev.map((doctor) =>
+            doctor.id === currentDoctorId ? response.data : doctor
+          )
+        );
+        showMessage("Doctor updated successfully", false);
+      } else {
+        setDoctors((prev) => [...prev, response.data]);
+        showMessage("Doctor added successfully", false);
+      }
       handleClose();
     } catch (error) {
-      if (error.response?.status === 409) {
-        showMessage("Username already exists. Please choose another.", true);
-      } else {
-        showMessage("Failed to save doctor", true);
-      }
-      console.error("Error saving doctor:", error);
+      const errorMsg = error.response?.data?.error || "Operation failed";
+      showMessage(errorMsg, true);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = useCallback(
-    async (doctorId) => {
-      if (!doctorId) {
-        showMessage("Invalid doctor ID", true);
+  const handleDelete = async (doctorId) => {
+    try {
+      const res = await fetch(`${Back_Origin}/doctors/${doctorId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: getCookie("token") || "",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showMessage(data.error || "Failed to delete doctor", true);
         return;
       }
-
-      setLoading(true);
-      try {
-        const response = await axios.delete(
-          `${Back_Origin}/doctors/${doctorId}`,
-          { headers: { authorization: getCookie("token") || "" } }
-        );
-
-        if (response.data.error) {
-          showMessage(response.data.error, true);
-          return;
-        }
-
-        setDoctors((prev) => prev.filter((doctor) => doctor._id !== doctorId));
-        showMessage("Doctor deleted successfully", false);
-      } catch (error) {
-        showMessage("Failed to delete doctor", true);
-        console.error("Error deleting doctor:", error);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [showMessage, setLoading]
-  );
+      setDoctors((prev) => prev.filter((doctor) => doctor.id !== doctorId));
+      showMessage("Doctor deleted successfully", false);
+    } catch (error) {
+      showMessage("Error deleting doctor", true);
+    }
+  };
 
   const timeOptions = useMemo(() => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        const time = `${String(hour).padStart(2, "0")}:${String(
-          minute
-        ).padStart(2, "0")}`;
-        times.push(time);
+        times.push(
+          `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+        );
       }
     }
     return times;
@@ -201,7 +189,6 @@ const Doctors = ({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Username</TableCell>
               <TableCell>Contact Number</TableCell>
@@ -225,14 +212,13 @@ const Doctors = ({
             ) : (
               doctors.map((doctor) => (
                 <TableRow key={doctor.id}>
-                  <TableCell>{doctor.id}</TableCell>
                   <TableCell>{doctor.name}</TableCell>
                   <TableCell>{doctor.username}</TableCell>
                   <TableCell>{doctor.contactNumber}</TableCell>
                   <TableCell>
-                    {doctor.availability.days.join(", ")} (
-                    {doctor.availability.time.start} -{" "}
-                    {doctor.availability.time.end})
+                    {doctor.availability?.days?.join(", ") || ""} (
+                    {doctor.availability?.time?.start || ""} -{" "}
+                    {doctor.availability?.time?.end || ""})
                   </TableCell>
                   <TableCell>
                     <Button
@@ -245,7 +231,7 @@ const Doctors = ({
                     <Button
                       onClick={() => handleDelete(doctor.id)}
                       variant="contained"
-                      color="secondary"
+                      style={{ backgroundColor: "#b4182d" }}
                     >
                       Delete
                     </Button>
@@ -257,21 +243,10 @@ const Doctors = ({
         </Table>
       </TableContainer>
 
-      {/* Add/Edit Doctor Dialog */}
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{editMode ? "Edit Doctor" : "Add Doctor"}</DialogTitle>
         <DialogContent>
           <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              margin="normal"
-              label="ID"
-              name="id"
-              value={formData.id}
-              onChange={handleChange}
-              required
-              disabled={editMode} // Disable ID field in edit mode
-            />
             <TextField
               fullWidth
               margin="normal"
@@ -298,7 +273,7 @@ const Doctors = ({
               type="password"
               value={formData.password}
               onChange={handleChange}
-              required={!editMode} // Password is required only for new doctors
+              required={!editMode}
             />
             <TextField
               fullWidth
@@ -310,7 +285,6 @@ const Doctors = ({
               required
             />
 
-            {/* Availability Start Time Dropdown */}
             <FormControl fullWidth margin="normal">
               <InputLabel>Availability Start Time</InputLabel>
               <Select
@@ -327,7 +301,6 @@ const Doctors = ({
               </Select>
             </FormControl>
 
-            {/* Availability End Time Dropdown */}
             <FormControl fullWidth margin="normal">
               <InputLabel>Availability End Time</InputLabel>
               <Select
@@ -345,7 +318,7 @@ const Doctors = ({
             </FormControl>
 
             <DialogActions>
-              <Button onClick={handleClose} color="danger">
+              <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
               <Button type="submit" color="primary">
