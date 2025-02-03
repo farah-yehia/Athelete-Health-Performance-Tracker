@@ -50,27 +50,20 @@ const fetchLeagues = async (setLoading, setData, team) => {
 };
 
 const fetchDoctors = async (setLoading, setDoctors) => {
-  const token = getCookie("token");
-  if (!token) {
-    console.error("No token found. Please log in.");
-    return;
-  }
   setLoading(true);
   try {
-    const response = await axios.get(`${Back_Origin}/fetchDoctors`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const res = await fetch(`${Back_Origin}/fetchDoctors`, {
+      headers: { authorization: getCookie("token") || "" },
     });
-    setDoctors(response.data);
-    console.log(`Fetched doctors are :`, response.data);
+    const data = await res.json();
+    console.log("Fetched doctors:", data); // Verify response
+    setDoctors(data);
   } catch (error) {
-    console.error("Error fetching doctors:", error);
+    console.error("Error fetching doctors", error);
   } finally {
     setLoading(false);
   }
 };
-
 function App() {
   const [showHeaderAndFooter, setShowHeaderAndFooter] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(!!getCookie("token"));
@@ -141,7 +134,9 @@ function App() {
         logoutUser,
         setLoading,
         loading,
-        doctors
+        doctors,
+        fetchDoctors,
+        setDoctors
       }}
     >
       <div className="body-container">

@@ -44,7 +44,7 @@ const Doctors = () => {
   // Use the external UUID (doctor.id) for update/delete operations.
   const [currentDoctorId, setCurrentDoctorId] = useState(null);
 
-  const { showMessage, setLoading, doctors, loading, setDoctors } =
+  const { showMessage, setLoading, doctors, loading, setDoctors ,fetchDoctors} =
     useContext(currentUserContext);
 
   useEffect(() => {
@@ -140,27 +140,35 @@ const Doctors = () => {
       setLoading(false);
     }
   };
+const handleDelete = async (doctorId) => {
+  try {
+    const res = await fetch(`${Back_Origin}/doctors/${doctorId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: getCookie("token") || "",
+      },
+    });
 
-  const handleDelete = async (doctorId) => {
-    try {
-      const res = await fetch(`${Back_Origin}/doctors/${doctorId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: getCookie("token") || "",
-        },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showMessage(data.error || "Failed to delete doctor", true);
-        return;
-      }
-      setDoctors((prev) => prev.filter((doctor) => doctor.id !== doctorId));
-      showMessage("Doctor deleted successfully", false);
-    } catch (error) {
-      showMessage("Error deleting doctor", true);
+    if (!res.ok) {
+      showMessage("Failed to delete doctor", true);
+      return;
     }
-  };
+
+    setDoctors((prev) => prev.filter((doctor) => doctor._id !== doctorId));
+
+    showMessage("Doctor deleted successfully", false);
+
+    // Delay fetch to ensure backend update is reflected
+    setTimeout(() => {
+      fetchDoctors(setLoading, setDoctors);
+    }, 500);
+  } catch (error) {
+    showMessage("Error deleting doctor", true);
+    console.error(error);
+  }
+};
+
 
   const timeOptions = useMemo(() => {
     const times = [];

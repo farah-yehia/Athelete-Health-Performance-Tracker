@@ -291,9 +291,10 @@ const deleteDoctor = async (req, res) => {
   try {
     // Use the route parameter "doctorId"
     const doctorId = req.params.doctorId;
+    console.log(doctorId);
     // Find and delete by the external UUID field (doctor.id)
     const doctor = await Doctor.findOneAndDelete({ id: doctorId });
-
+    console.log(doctor)
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
