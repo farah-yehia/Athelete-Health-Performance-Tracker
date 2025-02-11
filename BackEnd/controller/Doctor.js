@@ -4,12 +4,20 @@ const jwt = require("jsonwebtoken");
 const ENV = require("../env");
 const validator = require("validator");
 const { v4: uuidv4 } = require("uuid");
+const { Secret_Key } = require("../env");
 const signupDoctor = async (req, res, next) => {
   try {
+    console.log("Doctor Signup Request Body:", req.body);
+
     const { name, username, password, role, contactNumber, availability } =
       req.body;
-  console.log(req.body)
-    // Validation logic
+
+    // Validate role
+    if (role !== "doctor") {
+      return res.status(400).json({ error: "Only 'doctor' role is allowed" });
+    }
+
+    // Validate inputs
     if (!validator.isLength(name, { min: 3 })) {
       return res
         .status(400)
@@ -20,21 +28,19 @@ const signupDoctor = async (req, res, next) => {
     }
     if (!validator.isStrongPassword(password, { minLength: 8 })) {
       return res.status(400).json({
-        error: "Password must be strong and at least 8 characters long",
+        error: "Password must be at least 8 characters long and strong",
       });
     }
-    if (role !== "doctor") {
-      return res.status(400).json({ error: "Only 'doctor' role is allowed" });
-    }
 
-    // Check if the doctor already exists
+    // Check if username exists
     const existingDoctor = await Doctor.findOne({ username });
     if (existingDoctor) {
       return res.status(400).json({ error: "Username already exists" });
     }
+
+    // Create and store new doctor
     const doctorId = uuidv4();
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newDoctor = new Doctor({
       name,
       id: doctorId,
@@ -47,27 +53,33 @@ const signupDoctor = async (req, res, next) => {
 
     await newDoctor.save();
 
-    // Log the new doctor data for debugging
-    console.log(newDoctor);
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: doctorId, username, role },
+      Secret_Key, // Ensure Secret_Key is properly configured
+      { expiresIn: "7d" }
+    );
 
     res
       .status(201)
-      .json({ message: "Doctor created successfully", data: newDoctor });
+      .json({ message: "Doctor created successfully", data: token });
   } catch (error) {
     res.status(500).json({ error: "Unexpected Error Occurred" });
     next(`ERROR IN: signupDoctor function => ${error.message}`);
+    console.error(error.message);
   }
 };
 
 // Function to login a Doctor
 const loginDoctor = async (req, res, next) => {
   try {
+    console.log("Doctor Login Request Body:", req.body);
     const { username, password } = req.body;
 
     if (!username || !validator.isAlphanumeric(username)) {
       return res.status(400).json({ error: "Valid username is required" });
     }
-    if (!password || !validator.isLength(password, { min: 8 })) {
+    if (!password || password.length < 8) {
       return res
         .status(400)
         .json({ error: "Password must be at least 8 characters long" });
@@ -75,29 +87,32 @@ const loginDoctor = async (req, res, next) => {
 
     const doctor = await Doctor.findOne({ username });
     if (!doctor) {
-      return res.status(404).json({ error: "Invalid username" });
-    } else if (!(await bcrypt.compare(password, doctor.password))) {
-      return res.status(404).json({ error: "Invalid password" });
-    } else {
-      const token = await jwt.sign(
-        {
-          name: doctor.name,
-          username: doctor.username,
-          role: doctor.role,
-          contactNumber: doctor.contactNumber,
-          availability: doctor.availability,
-          id: doctor.id,
-        },
-        ENV.Secret_Key,
-        { expiresIn: "1h" }
-      );
-      res.status(201).json({ message: `Welcome ${doctor.name}`, data: token });
+      return res.status(400).json({ error: "Invalid username" });
     }
+    if (!(await bcrypt.compare(password, doctor.password))) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        name: doctor.name,
+        username: doctor.username,
+        role: doctor.role,
+        id: doctor.id,
+      },
+      Secret_Key,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({ message: `Welcome ${doctor.name}`, data: token });
   } catch (error) {
-    res.status(404).json({ error: "Unexpected Error Occurred" });
+    console.error("Error in loginDoctor:", error);
+    res.status(500).json({ error: "Unexpected Error Occurred" });
     next(`ERROR IN: loginDoctor function => ${error}`);
   }
 };
+
 //logout
 const logoutdoctor = async (req, res, next) => {
   try {

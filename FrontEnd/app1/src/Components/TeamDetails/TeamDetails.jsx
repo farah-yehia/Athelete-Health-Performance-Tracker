@@ -19,7 +19,7 @@ const TeamDetails = () => {
       const response = await axios.get(
         `${Back_Origin}/api/teams?team=${encodeURIComponent(teamName)}`
       );
-      setPlayers(response.data?.players || []); // Use response structure
+      setPlayers(response.data?.players || []); 
     } catch (err) {
       console.error("Error fetching players:", err);
       setError("Failed to load players for this team. Please try again later.");

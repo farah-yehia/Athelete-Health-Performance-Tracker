@@ -5,7 +5,7 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const ENV = require("../env");
 const axios = require("axios");
-const { Secret_Key } = require("../env");
+const { Secret_Key , ADMIN_SECRET_VALUE} = require("../env");
 const mongoose = require("mongoose");
 // Function to add a Admin
 const getAdmin = async (req, res, next) => {
@@ -73,8 +73,18 @@ const editAdmin = async (req, res, next) => {
 //Function to allow a Admin to create an account (signup)
 const signupAdmin = async (req, res, next) => {
   try {
-    const { name, username, password, role } = req.body;
+    const { name, username, password, role, accessCode } = req.body;
+    const ADMIN_SECRET_CODE = ADMIN_SECRET_VALUE; // Store securely in .env
 
+    if (role !== "admin") {
+      return res.status(400).json({ error: "Only admin role allowed here" });
+    }
+
+    if (accessCode !== ADMIN_SECRET_CODE) {
+      return res.status(403).json({ error: "Invalid access code" });
+    }
+
+    // Validate inputs
     if (!validator.isLength(name, { min: 3 })) {
       return res
         .status(400)
@@ -84,18 +94,20 @@ const signupAdmin = async (req, res, next) => {
       return res.status(400).json({ error: "Username must be alphanumeric" });
     }
     if (!validator.isStrongPassword(password, { minLength: 8 })) {
-      return res.status(400).json({
-        error: "Password must be strong and at least 8 characters long",
-      });
-    }
-    if (role !== "admin") {
-      return res.status(400).json({ error: "Only admin role allowed here" });
+      return res
+        .status(400)
+        .json({
+          error: "Password must be at least 8 characters long and strong",
+        });
     }
 
+    // Check if username exists
     const existingAdmin = await Admin.findOne({ username });
     if (existingAdmin) {
       return res.status(400).json({ error: "Username already exists" });
     }
+
+    // Create and store new admin
     const adminId = uuidv4();
     const hashedPassword = await bcrypt.hash(password, 10);
     const newAdmin = new Admin({
@@ -107,53 +119,62 @@ const signupAdmin = async (req, res, next) => {
     });
 
     await newAdmin.save();
-    console.log(newAdmin);
+
+    const token = jwt.sign(
+      { id: adminId, username, role },
+      Secret_Key,
+      { expiresIn: "7d" }
+    );
+
     res
       .status(201)
-      .json({ message: "Admin created successfully", data: newAdmin });
+      .json({ message: "Admin created successfully", data: token });
   } catch (error) {
     res.status(500).json({ error: "Unexpected Error Occurred" });
     next(`ERROR IN: signupAdmin function => ${error.message}`);
+    console.error(error.message)
   }
 };
 
-// Function to login an Admin
 const loginAdmin = async (req, res, next) => {
   try {
-    console.log("req is => ", req.body);
+    console.log("Login Request Body:", req.body);
     const { username, password } = req.body;
-    console.log(username);
-    // Validate the username
+
     if (!username || !validator.isAlphanumeric(username)) {
       return res.status(400).json({ error: "Valid username is required" });
     }
-    if (!password || !validator.isLength(password, { min: 8 })) {
+    if (!password || password.length < 8) {
       return res
         .status(400)
         .json({ error: "Password must be at least 8 characters long" });
     }
+
     const admin = await Admin.findOne({ username });
     if (!admin) {
-      return res.status(404).json({ error: "Invalid username" });
-    } else if (!(await bcrypt.compare(password, admin.password))) {
-      return res.status(404).json({ error: "Invalid password" });
-    } else {
-      const token = await jwt.sign(
-        {
-          name: admin.name,
-          username: admin.username,
-          role: admin.role,
-          password: admin.password,
-          id: admin.id,
-        },
-        Secret_Key,
-        { expiresIn: "1h" }
-      );
-      console.log(admin);
-      res.status(201).json({ message: `Welcome ${admin.name}`, data: token });
+      return res.status(400).json({ error: "Invalid username" });
     }
+    if (!(await bcrypt.compare(password, admin.password))) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    // Generate JWT without password
+    const token = jwt.sign(
+      {
+        name: admin.name,
+        username: admin.username,
+        role: admin.role,
+        id: admin.id,
+      },
+      Secret_Key,
+      { expiresIn: "1h" }
+    );
+
+    console.log("Admin Found:", admin);
+    res.status(200).json({ message: `Welcome ${admin.name}`, data: token });
   } catch (error) {
-    res.status(404).json({ error: "Unexpected Error Occurred" });
+    console.error("Error in loginAdmin:", error);
+    res.status(500).json({ error: "Unexpected Error Occurred" });
     next(`ERROR IN: login function => ${error}`);
   }
 };

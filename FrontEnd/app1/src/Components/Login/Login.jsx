@@ -30,6 +30,7 @@ const Login = () => {
     username: "",
     password: "",
   });
+
   const navigate = useNavigate();
 
   if (loader) {
@@ -57,59 +58,63 @@ const Login = () => {
     }
   };
 
+  // Validate form inputs
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.username) errors.username = "Username is required";
+    if (!formData.password) errors.password = "Password is required";
+    return errors;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoader(true);
 
-    // Try to check if the username is in the Admin or Doctor model
-    const adminResponse = await fetch(`${Back_Origin}/admins/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    const doctorResponse = await fetch(`${Back_Origin}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    
-    if (adminResponse.ok) {
-      // Admin login successful
-      const data = await adminResponse.json();
-      console.log(jwtDecode(data.data))
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      showMessage("Please fill in all required fields", true);
       setLoader(false);
-      if (!data.error) {
-        showMessage(data.message, false);
+      return;
+    }
+
+    try {
+      // Attempt Admin Login
+      let response = await fetch(`${Back_Origin}/admins/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        // If Admin login fails, try Doctor login
+        response = await fetch(`${Back_Origin}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+      }
+
+      const data = await response.json();
+      setLoader(false);
+
+      if (response.ok && data?.data) {
+        showMessage(data.message || "Login successful", false);
         setCookie("token", data.data);
         setIsAuthenticated(true);
         setCurrentUser(jwtDecode(data.data));
         navigate("/teams");
       } else {
-        showMessage(data.error, true);
+        showMessage(data?.error || "Invalid credentials", true);
         setIsAuthenticated(false);
       }
-    } else if (doctorResponse.ok) {
-      // Doctor login successful
-      const data = await doctorResponse.json();
+    } catch (error) {
+      console.error("Login Error:", error);
       setLoader(false);
-      if (!data.error) {
-        showMessage(data.message, false);
-        setCookie("token", data.data);
-        setIsAuthenticated(true);
-        setCurrentUser(jwtDecode(data.data));
-        navigate("/teams");
-      } else {
-        showMessage(data.error, true);
-        setIsAuthenticated(false);
-      }
-    } else {
-      setLoader(false);
-      showMessage("Invalid credentials for both Admin and Doctor", true);
+      showMessage("Login failed. Please try again.", true);
       setIsAuthenticated(false);
     }
   };
+
 
   return (
     <>
@@ -124,13 +129,18 @@ const Login = () => {
           "@media (max-width: 880px)": {
             padding: "40px",
             borderRadius: "8px",
-            width: " 50% !important",
+            width: "50% !important",
           },
         }}
       >
-        <h4 className="mb-3" style={{ color: " #b4182d" , fontFamily: "fantasy",
-    fontWeight: "lighter"
- }}>
+        <h4
+          className="mb-3"
+          style={{
+            color: "#b4182d",
+            fontFamily: "fantasy",
+            fontWeight: "lighter",
+          }}
+        >
           Login to your account
         </h4>
         <form onSubmit={handleSubmit}>
@@ -150,20 +160,12 @@ const Login = () => {
             sx={{
               my: 2,
               "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "grey",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#274546",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#274546",
-                },
+                "& fieldset": { borderColor: "grey" },
+                "&:hover fieldset": { borderColor: "#274546" },
+                "&.Mui-focused fieldset": { borderColor: "#274546" },
               },
               "& .MuiInputLabel-root": {
-                "&.Mui-focused": {
-                  color: "#274546 !important",
-                },
+                "&.Mui-focused": { color: "#274546 !important" },
               },
             }}
           />
@@ -175,20 +177,12 @@ const Login = () => {
             sx={{
               my: 2,
               "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "grey",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#274546",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#274546",
-                },
+                "& fieldset": { borderColor: "grey" },
+                "&:hover fieldset": { borderColor: "#274546" },
+                "&.Mui-focused fieldset": { borderColor: "#274546" },
               },
               "& .MuiInputLabel-root": {
-                "&.Mui-focused": {
-                  color: "#274546 !important",
-                },
+                "&.Mui-focused": { color: "#274546 !important" },
               },
             }}
           >
@@ -223,11 +217,9 @@ const Login = () => {
             className="extraBold-text pascalCase-text"
             fullWidth
             sx={{
-              backgroundColor: " #b4182d;",
+              backgroundColor: "#b4182d",
               color: "white",
-              "&:hover": {
-                backgroundColor: "black",
-              },
+              "&:hover": { backgroundColor: "black" },
             }}
           >
             Sign In
@@ -244,7 +236,7 @@ const Login = () => {
               color: "black",
             }}
           >
-            Don't have an account?
+            Don't have an account?{" "}
             <span style={{ color: "#1e3a85", fontWeight: "bolder" }}>
               Sign up
             </span>

@@ -21,7 +21,7 @@ const TeamsCard = ({
           onError={(e) => {
             e.target.onerror = null;
             e.target.src =
-              "https://via.placeholder.com/150x190.png?text=No+Image"; // Fallback image
+              "https://via.placeholder.com/150x190.png?text=No+Image"; 
           }}
           alt={`${name}'s profile`}
           className="card-img-top"

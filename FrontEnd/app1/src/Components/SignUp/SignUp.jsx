@@ -18,7 +18,7 @@ import { currentUserContext } from "../../App.jsx";
 import { Back_Origin } from "../../Front_ENV.jsx";
 import { setCookie } from "../Cookie/Cookie.jsx";
 import { jwtDecode } from "jwt-decode";
-import "./SignUp.css"
+import "./SignUp.css";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -32,6 +32,7 @@ const SignUp = () => {
     confirmPassword: "",
     role: "",
     contactNumber: "",
+    accessCode: "",
   });
 
   const [gender, setGender] = useState("");
@@ -45,8 +46,8 @@ const SignUp = () => {
   };
 
   const handleRoleChange = (e) => {
-    setFormData({ ...formData, role: e.target.value });
-    setErrors((prev) => ({ ...prev, role: "" }));
+    setFormData({ ...formData, role: e.target.value, accessCode: "" });
+    setErrors((prev) => ({ ...prev, role: "", accessCode: "" }));
   };
 
   const handleGenderChange = (e) => {
@@ -63,92 +64,95 @@ const SignUp = () => {
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords must match";
     if (!formData.role) newErrors.role = "Role is required";
-    if (formData.role === "doctor") {
-      if (!formData.contactNumber.trim())
-        newErrors.contactNumber = "Contact number is required";
-    }
+    if (formData.role === "doctor" && !formData.contactNumber.trim())
+      newErrors.contactNumber = "Contact number is required";
+    if (formData.role === "admin" && !formData.accessCode.trim())
+      newErrors.accessCode = "Access code is required";
     if (!gender) newErrors.gender = "Gender is required";
-    return newErrors;
+
+    return newErrors; 
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  setLoading(true);
+
   const formErrors = validateForm();
   if (Object.keys(formErrors).length > 0) {
     setErrors(formErrors);
+    setLoading(false);
     return;
   }
 
-  setLoading(true);
   try {
     const endpoint =
       formData.role === "admin" ? "admins/signup" : "doctors/signup";
 
+    const { confirmPassword, ...cleanData } = formData;
+    const requestBody = { ...cleanData, gender };
+
     const response = await fetch(`${Back_Origin}/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        gender,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    console.log(data)
     setLoading(false);
+    console.log("Response Data:", data);
 
-    if (response.ok) {
-      if (!data.error) {
-        showMessage(data.message, false);
-        setCookie("token", data.data);
-        setIsAuthenticated(true);
-        setCurrentUser(jwtDecode(data.data));
-     
-      } else {
-        showMessage(data.error, true); // If there's an error in the response
-        setIsAuthenticated(false);
-      }
-    } else {
+    if (response.ok && data.data) {
+      // ✅ Signup was successful
+      showMessage(data.message || "Signup successful", false);
+      setCookie("token", data.data);
+      setIsAuthenticated(true);
+      setCurrentUser(jwtDecode(data.data));
+
+      // ✅ Navigate after short delay
+      setTimeout(() => navigate("/login"), 300);
+    } else if (data.error) {
+      // ✅ Show only the error if no data exists
+      showMessage(data.error, true);
       setIsAuthenticated(false);
+
+      // ✅ Handle specific access code errors
+      if (data.error.toLowerCase().includes("access code")) {
+        setErrors((prev) => ({ ...prev, accessCode: data.error }));
+      }
     }
   } catch (error) {
     setLoading(false);
-   
     setIsAuthenticated(false);
+    showMessage("Signup failed. Please try again.", true);
   }
-     navigate("/login");
 };
-
-
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        maxWidth: "35%",
+        maxWidth: { xs: "90%", sm: "60%", md: "40%", lg: "35%" },
         margin: "auto",
         padding: "30px",
         borderRadius: "9px",
         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-        "@media (max-width: 880px)": {
-          padding: "40px",
-          borderRadius: "8px",
-          width: " 50% !important",
-        },
+        backgroundColor: "white",
       }}
     >
       <Typography
         variant="h5"
         gutterBottom
         sx={{
-          fontSize: "27px !important",
+          fontSize: "27px",
           color: "#b4182d",
-          fontFamily: "fantasy !important",
+          fontFamily: "fantasy",
+          textAlign: "center",
         }}
       >
         Sign Up
       </Typography>
+
       <TextField
         label="Name"
         name="name"
@@ -196,19 +200,33 @@ const handleSubmit = async (e) => {
         helperText={errors.confirmPassword}
       />
 
-      <FormControl fullWidth margin="normal">
+      <FormControl fullWidth margin="normal" error={!!errors.role}>
         <InputLabel>Role</InputLabel>
         <Select
           value={formData.role}
           onChange={handleRoleChange}
           name="role"
           required
-          error={!!errors.role}
         >
           <MenuItem value="doctor">Doctor</MenuItem>
           <MenuItem value="admin">Admin</MenuItem>
         </Select>
       </FormControl>
+
+      {formData.role === "admin" && (
+        <TextField
+          label="Access Code"
+          name="accessCode"
+          type="password"
+          value={formData.accessCode}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+          error={!!errors.accessCode}
+          helperText={errors.accessCode}
+        />
+      )}
 
       {formData.role === "doctor" && (
         <TextField
@@ -224,19 +242,23 @@ const handleSubmit = async (e) => {
         />
       )}
 
-      <FormControl component="fieldset" fullWidth margin="normal" required>
+      <FormControl
+        component="fieldset"
+        fullWidth
+        margin="normal"
+        error={!!errors.gender}
+      >
         <FormLabel>Gender</FormLabel>
-        <RadioGroup row value={gender} onChange={handleGenderChange}>
+        <RadioGroup
+          row
+          name="gender"
+          value={gender}
+          onChange={handleGenderChange}
+        >
           <FormControlLabel value="Male" control={<Radio />} label="Male" />
           <FormControlLabel value="Female" control={<Radio />} label="Female" />
         </RadioGroup>
       </FormControl>
-
-      {errors.gender && (
-        <Typography color="error" variant="body2">
-          {errors.gender}
-        </Typography>
-      )}
 
       <Button
         variant="contained"
@@ -247,6 +269,7 @@ const handleSubmit = async (e) => {
           backgroundColor: "#b4182d",
           color: "white",
           "&:hover": { backgroundColor: "black" },
+          mt: 2,
         }}
       >
         {loading ? "Signing Up..." : "Sign Up"}
