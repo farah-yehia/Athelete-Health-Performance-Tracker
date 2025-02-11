@@ -136,7 +136,7 @@ function App() {
         loading,
         doctors,
         fetchDoctors,
-        setDoctors,
+        setDoctors
       }}
     >
       <div className="body-container">
@@ -169,26 +169,26 @@ function App() {
                   />
                 }
               />
-              <Route
-                path="/teams/:team"
-                element={
-                  isAuthenticated ? (
-                    <TeamDetails
-                      fetchLeagues={fetchLeagues}
-                      setLoading={setLoading}
-                      setData={setData}
-                      data={data}
-                    />
-                  ) : (
-                    <Navigate to="/login" replace />
-                  )
-                }
-              />
+             <Route
+    path="/teams/:team"
+    element={
+      isAuthenticated ? (
+        <TeamDetails
+          fetchLeagues={fetchLeagues}
+          setLoading={setLoading}
+          setData={setData}
+          data={data}
+        />
+      ) : (
+        <Navigate to="/login" replace />
+      )
+    }
+  />
               <Route
                 path="/doctors"
                 element={
                   <ProtectedRoute role="admin">
-                    <Doctors />
+                    <Doctors  />
                   </ProtectedRoute>
                 }
               />

@@ -2,15 +2,13 @@ import React from "react";
 
 const TeamsCard = ({
   name,
-  number,
-  weight = "N/A",
-  height = "N/A",
-  team,
+  weight = (Math.random() * (100 - 50) + 50).toFixed(1), // Random weight (50-100 kg)
+  BMI = (Math.random() * (30 - 18) + 18).toFixed(1), // Random BMI (18-30)
   img,
-  distance = "N/A",
-  age,
-  heartRate,
-  lastUpdated,
+  distance = (Math.random() * (15 - 1) + 1).toFixed(2), // Random distance (1-15 km)
+  age = Math.floor(Math.random() * 20) + 20, // Random age (20-39)
+  heartRate = "Updating...",
+  MheartRate = "Updating...",
 }) => {
   return (
     <div className="card text-white fw-bold text-start bg-warning">
@@ -21,7 +19,7 @@ const TeamsCard = ({
           onError={(e) => {
             e.target.onerror = null;
             e.target.src =
-              "https://via.placeholder.com/150x190.png?text=No+Image"; 
+              "https://via.placeholder.com/150x190.png?text=No+Image";
           }}
           alt={`${name}'s profile`}
           className="card-img-top"
@@ -33,28 +31,22 @@ const TeamsCard = ({
       <div className="card-body">
         <h5 className="card-title">{name || "Unnamed Player"}</h5>
         <p className="card-text">
-          <strong>Number:</strong> {number || "N/A"}
+          <strong>Weight:</strong> {weight} kg
         </p>
         <p className="card-text">
-          <strong>Weight:</strong> {weight}
+          <strong>BMI:</strong> {BMI}
         </p>
-        <p className="card-text">
-          <strong>Height:</strong> {height}
-        </p>
-        {/* <p className="card-text">
-          <strong>Team:</strong> {team || "Unknown Team"}
-        </p> */}
         <p className="card-text">
           <strong>Distance Covered:</strong> {distance} km
         </p>
-        <p className="card-text">
+        {/* <p className="card-text">
           <strong>Age:</strong> {age}
+        </p> */}
+        <p className="card-text">
+          <strong>AI Model Heart Rate:</strong> {heartRate} bpm
         </p>
         <p className="card-text">
-          <strong>Heart Rate:</strong> {heartRate}
-        </p>
-        <p className="card-text">
-          <strong>Last Updated:</strong> {lastUpdated}
+          <strong>Machine Heart Rate:</strong> {MheartRate}
         </p>
       </div>
     </div>
