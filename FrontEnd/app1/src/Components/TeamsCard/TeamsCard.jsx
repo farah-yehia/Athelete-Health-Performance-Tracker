@@ -9,10 +9,14 @@ const TeamsCard = ({
   age = Math.floor(Math.random() * 20) + 20, // Random age (20-39)
   heartRate = "Updating...",
   MheartRate = "Updating...",
+  onClick
 }) => {
   return (
-    <div className="card text-white fw-bold text-start bg-warning">
-      {/* Player Image */}
+    <div
+      className="card text-white fw-bold text-start bg-warning"
+      onClick={() => onClick && onClick(id)}
+      style={{ cursor: "pointer" }}
+    >
       <div className="card-image">
         <img
           src={img}
@@ -26,8 +30,6 @@ const TeamsCard = ({
           style={{ width: "150px", height: "190px", marginTop: "10px" }}
         />
       </div>
-
-      {/* Player Information */}
       <div className="card-body">
         <h5 className="card-title">{name || "Unnamed Player"}</h5>
         <p className="card-text">
@@ -37,16 +39,13 @@ const TeamsCard = ({
           <strong>BMI:</strong> {BMI}
         </p>
         <p className="card-text">
-          <strong>Distance Covered:</strong> {distance} km
-        </p>
-        {/* <p className="card-text">
-          <strong>Age:</strong> {age}
-        </p> */}
-        <p className="card-text">
-          <strong>AI Model Heart Rate:</strong> {heartRate} bpm
+          <strong>Distance:</strong> {distance} km
         </p>
         <p className="card-text">
-          <strong>Machine Heart Rate:</strong> {MheartRate}
+          <strong>AI Heart Rate:</strong> {heartRate} bpm
+        </p>
+        <p className="card-text">
+          <strong>Machine Heart Rate:</strong> {MheartRate} bpm
         </p>
       </div>
     </div>
