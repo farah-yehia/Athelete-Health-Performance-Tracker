@@ -34,7 +34,7 @@ router.post("/admins/signup", controller.signupAdmin);
 router.post("/admins/login", controller.loginAdmin);
 router.post("/admins/logout", controller.logout);
 //fetchLeagues
-// router.get("/api/leagues",controller.fetchLeagues);
+router.get("/api/leagues",controller.fetchLeagues);
 router.post("/resetPassword/:token", controller.resetPassword); // verified front and back
 router.post("/verifyResetToken/:token", controller.verifyResetToken); // verified front and back
 // User updates for Admin and Doctor roles

@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import axios from "axios";
 import TeamsCard from "../TeamsCard/TeamsCard";
 import { Back_Origin } from "../../Front_ENV";
-import { Info, Download } from "lucide-react";
+import { Info, FileBarChart, Download } from "lucide-react";
 import "./TeamDetails.css";
 import {
   LineChart,
@@ -11,7 +11,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
@@ -25,20 +24,17 @@ const TeamDetails = () => {
   const [selectedPlayerStatic, setSelectedPlayerStatic] = useState(null);
   const [selectedPlayerLive, setSelectedPlayerLive] = useState(null);
   const [hrHistory, setHrHistory] = useState([]);
-  const [alert, setAlert] = useState("");
-  const [fullscreenChart, setFullscreenChart] = useState(false);
+  const [reportModal, setReportModal] = useState(null);
 
   const fetchTeamPlayers = async (teamName) => {
-    setLoading(true);
-    setError("");
     try {
-      const response = await axios.get(
+      setLoading(true);
+      const res = await axios.get(
         `${Back_Origin}/api/teams?team=${encodeURIComponent(teamName)}`
       );
-      setPlayers(response.data?.players || []);
+      setPlayers(res.data?.players || []);
     } catch (err) {
-      console.error("Error fetching players:", err);
-      setError("Failed to load players for this team. Please try again later.");
+      setError("Error loading players.");
     } finally {
       setLoading(false);
     }
@@ -53,34 +49,31 @@ const TeamDetails = () => {
 
     const fetchPlayer = async () => {
       try {
-        const { data } = await axios.get(
+        const res = await axios.get(
           `${Back_Origin}/api/player/${selectedPlayerId}`
         );
+        const {
+          name,
+          weight_kg,
+          bmi,
+          maxPlayTime,
+          heartRate,
+          MheartRate,
+          distance,
+        } = res.data;
 
-        if (!selectedPlayerStatic) {
-          const { name, weight, BMI, maxPlayTime } = data;
-          setSelectedPlayerStatic({ name, weight, BMI, maxPlayTime });
-        }
-
-        const { heartRate, MheartRate, distance } = data;
+        setSelectedPlayerStatic({ name, weight_kg, bmi, maxPlayTime });
         setSelectedPlayerLive({ heartRate, MheartRate, distance });
 
         setHrHistory((prev) => [
-          ...prev.slice(-9),
+          ...prev.slice(-19),
           {
             time: new Date().toLocaleTimeString(),
             ai: heartRate,
             hw: MheartRate,
           },
         ]);
-
-        if (heartRate > 180 || MheartRate > 180) {
-          setAlert("⚠️ Heart rate exceeded safe threshold!");
-        } else {
-          setAlert("");
-        }
       } catch (err) {
-        console.error("Failed to load player", err);
         setSelectedPlayerStatic(null);
         setSelectedPlayerLive(null);
       }
@@ -91,30 +84,41 @@ const TeamDetails = () => {
     return () => clearInterval(interval);
   }, [selectedPlayerId]);
 
-  const handleInfoClick = (id) => {
-    setSelectedPlayerId(id);
-  };
-
-  const closeModal = () => {
+  const closeLiveModal = () => {
     setSelectedPlayerId(null);
     setSelectedPlayerStatic(null);
     setSelectedPlayerLive(null);
     setHrHistory([]);
-    setAlert("");
-    setFullscreenChart(false);
+  };
+
+  const closeReportModal = () => setReportModal(null);
+
+  const openLiveModal = (id) => {
+    setSelectedPlayerId(id);
+  };
+
+  const openReportFromLive = () => {
+    if (selectedPlayerStatic?.maxPlayTime) {
+      setReportModal({
+        name: selectedPlayerStatic.name,
+        maxPlayTime: selectedPlayerStatic.maxPlayTime,
+      });
+    }
   };
 
   const downloadCSV = () => {
-    const csv = ["Time,AI Heart Rate,HW Heart Rate"]
-      .concat(hrHistory.map((d) => `${d.time},${d.ai},${d.hw}`))
-      .join("\n");
+    if (!reportModal) return;
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csvContent = `Player,Max Play Time (mins)\n${reportModal.name},${reportModal.maxPlayTime}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `heart_rate_${selectedPlayerStatic?.name || "player"}.csv`;
-    a.click();
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `max_play_time_${reportModal.name.replace(/\s+/g, "_")}.csv`
+    );
+    link.click();
     URL.revokeObjectURL(url);
   };
 
@@ -128,29 +132,25 @@ const TeamDetails = () => {
       {error && <p className="error-message">{error}</p>}
 
       <div className="players-list">
-        {players.length > 0
-          ? players.map((player, index) => (
-              <div
-                key={player._id || `${player.name}-${index}`}
-                className="card-container"
-              >
-                <TeamsCard {...player} id={player._id} />
-                <button
-                  className="info-icon"
-                  title="View Real-Time Data"
-                  onClick={() => handleInfoClick(player._id)}
-                >
-                  <Info size={20} color="white" />
-                </button>
-              </div>
-            ))
-          : !loading && <p>No players available for {team}.</p>}
+        {players.map((player, idx) => (
+          <div key={player._id || idx} className="card-container">
+            <TeamsCard {...player} />
+            <button
+              className="info-icon"
+              title="Live Monitor"
+              onClick={() => openLiveModal(player._id)}
+            >
+              <Info size={20} color="white" />
+            </button>
+          </div>
+        ))}
       </div>
 
+      {/* Live Data Modal */}
       {selectedPlayerId && (
         <div className="modern-modal-overlay">
           <div className="modern-modal">
-            <button className="close-btn" onClick={closeModal}>
+            <button className="close-btn" onClick={closeLiveModal}>
               &times;
             </button>
 
@@ -160,10 +160,8 @@ const TeamDetails = () => {
               <>
                 <h2 className="modal-title">
                   {selectedPlayerStatic.name}
-                  <span className="live-badge">🟠 LIVE</span>
+                  <span className="live-badge">🟢 Live</span>
                 </h2>
-
-                {alert && <div className="alert-box">{alert}</div>}
 
                 <div className="metrics-grid">
                   <div className="metric-card ai pulse">
@@ -178,57 +176,76 @@ const TeamDetails = () => {
                     <h4>Distance</h4>
                     <p>{selectedPlayerLive.distance} km</p>
                   </div>
-                  {selectedPlayerStatic.maxPlayTime && (
-                    <div className="metric-card max-time">
-                      <h4>Predicted Max Play Time</h4>
-                      <p>{selectedPlayerStatic.maxPlayTime} mins</p>
-                    </div>
-                  )}
                 </div>
 
-                <div className="chart-controls">
-                  <button
-                    className="btn enhanced-btn"
-                    onClick={() => setFullscreenChart(!fullscreenChart)}
-                  >
-                    {fullscreenChart ? "Exit Fullscreen" : "Fullscreen Chart"}
-                  </button>
-                  <button
-                    className="btn enhanced-btn download-btn"
-                    onClick={downloadCSV}
-                  >
-                    <Download size={16} /> Download Report
-                  </button>
-                </div>
-
-                <h4 style={{ marginTop: "10px" }}>Live Heart Rate Chart</h4>
-                <div
-                  style={{ width: "100%", height: fullscreenChart ? 400 : 200 }}
-                >
-                  <ResponsiveContainer>
+                <div className="chart-container">
+                  <h4>Live Heart Rate Chart</h4>
+                  <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={hrHistory}>
-                      <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+                      <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
-                      <YAxis domain={["auto", "auto"]} />
+                      <YAxis />
                       <Tooltip />
-                      <Legend />
                       <Line
                         type="monotone"
                         dataKey="ai"
                         stroke="#28a745"
+                        dot={false}
                         name="AI HR"
                       />
                       <Line
                         type="monotone"
                         dataKey="hw"
                         stroke="#007bff"
+                        dot={false}
                         name="HW HR"
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+
+                {selectedPlayerStatic.maxPlayTime && (
+                  <button
+                    className="btn"
+                    style={{ marginTop: "20px" }}
+                    onClick={openReportFromLive}
+                  >
+                    <FileBarChart size={16} /> View Match Report
+                  </button>
+                )}
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {reportModal && (
+        <div className="modern-modal-overlay">
+          <div className="modern-modal">
+            <button className="close-btn" onClick={closeReportModal}>
+              &times;
+            </button>
+            <h2 className="modal-title">📊 Match Report</h2>
+            <div className="report-content">
+              <p>
+                <strong>Max Playing Time:</strong> {reportModal.maxPlayTime}{" "}
+                mins
+              </p>
+            </div>
+            <div
+              className="report-buttons"
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+                marginTop: "20px",
+              }}
+            >
+              <button className="btn" onClick={downloadCSV}>
+                <Download size={16} /> Download Report
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -356,38 +356,65 @@ const updateDoctor = async (req, res) => {
   }
 };
 const FPL_API_URL = "https://fantasy.premierleague.com/api/bootstrap-static/";
+
 const fetchLeagues = async (req, res) => {
   try {
     const response = await axios.get(FPL_API_URL);
-    const players = response.data.elements.map((player) => ({
-      id: player.id,
-      name: `${player.first_name} ${player.second_name}`,
-      number: player.code,
-      height: player.height || "N/A", // Add a default value if not available
-      weight: player.weight || "N/A",
-      team:
-        response.data.teams.find((team) => team.id === player.team)?.name ||
-        "Unknown",
-      distanceCovered: Math.random().toFixed(2),
-      lastUpdated: Date.now(),
-      heartRate: Math.random().toFixed(2),
-      comments: [],
-      age: Math.floor(Math.random() * (40 - 18 + 1)) + 18,
-      img: player.photo
+    const data = response.data;
+
+    if (!data || !data.elements || !data.teams) {
+      return res.status(400).json({ error: "Invalid FPL data format." });
+    }
+
+    const players = data.elements.map((player) => {
+      const fullName = `${player.first_name} ${player.second_name}`;
+      const teamName =
+        data.teams.find((t) => t.id === player.team)?.name || "Unknown";
+      const image = player.photo
         ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${
             player.photo.split(".")[0]
           }.png`
-        : "/default-player-image.png",
-    }));
+        : "";
 
-    console.log(players); // Verify the data
+      return {
+        name: fullName,
+        age: Math.floor(Math.random() * 11) + 20,
+        weight_kg: Math.floor(Math.random() * 41) + 60,
+        duration_minutes: Math.floor(Math.random() * 91),
+        intensity: "Moderate",
+        bmi: parseFloat((Math.random() * 12 + 18).toFixed(1)),
+        vo2_max: Math.floor(Math.random() * 31) + 30,
+        calories: Math.floor(Math.random() * 9901) + 100,
+        steps: Math.floor(Math.random() * 12001) + 3000,
+        heartRate: Math.floor(Math.random() * 121) + 60,
+        MheartRate: Math.floor(Math.random() * 121) + 60,
+        distance: parseFloat((Math.random() * 11 + 1).toFixed(2)),
+        maxPlayTime: Math.floor(Math.random() * 91),
+        lastUpdated: new Date(),
+        team: teamName,
+        role: "player",
+        img: image,
+        comments: [],
+      };
+    });
 
-    res.status(200).json({ data: players });
+    await Player.insertMany(players);
+    console.log("✅ Players inserted into local DB");
+
+    res
+      .status(200)
+      .json({ message: "Players fetched and stored", count: players.length });
   } catch (error) {
-    console.error("Error fetching FPL data:", error.message);
-    res.status(500).json({ error: "Failed to fetch player data." });
+    console.error("❌ Error in fetchLeagues:", error.message);
+    res
+      .status(500)
+      .json({
+        error: "Failed to fetch and store players",
+        details: error.message,
+      });
   }
 };
+
 const verifyResetToken = async (req, res, next) => {
   try {
     const token = req.params.token || req.headers["authorization"];
