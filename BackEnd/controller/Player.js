@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { Player } = require("../db/Database");
+const axios = require("axios");
+
+
 
 // ✅ Fetch players by team
 router.get("/api/teams", async (req, res) => {
@@ -57,5 +60,40 @@ router.get("/api/player/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch player" });
   }
 });
+
+// ✅ Trigger AI model only (no save, no response)
+router.post("/player/:id/post-match-analysis", async (req, res) => {
+  const playerId = req.params.id;
+
+  try {
+    const player = await Player.findById(playerId);
+    if (!player) return res.status(404).json({ error: "Player not found" });
+
+    const inputData = {
+      _id: playerId, // Send ObjectId so Flask can update DB
+      avg_heart_rate: player.avg_heart_rate || 0,
+      distance: player.distance || 0,
+      duration_minutes: player.duration_minutes || 0,
+      intensity: player.intensity || "medium",
+      age: player.age || 20,
+      vo2_max: player.vo2_max || 30,
+      weight_kg: player.weight_kg || 70,
+      bmi: player.bmi || 22,
+      calories: player.calories || 0,
+      steps: player.steps || 0,
+    };
+
+    console.log("Sending to Flask model:", inputData);
+
+    await axios.post("http://44.203.148.137:5001/predict-maxplay", inputData);
+
+    // ✅ No need to wait for response data, or save anything here
+    res.status(204).send(); // 204 No Content = success, nothing returned
+  } catch (err) {
+    console.error("Post-match AI error:", err.message);
+    res.status(500).json({ error: "AI trigger failed" });
+  }
+});
+
 
 module.exports = router;

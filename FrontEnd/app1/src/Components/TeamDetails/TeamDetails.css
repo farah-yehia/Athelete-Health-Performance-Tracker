@@ -296,6 +296,7 @@ span {
 .download-btn:hover {
     background: linear-gradient(to right, #6dd47e, #28a745);
 }
+
 /* Alert Box */
 .alert-box {
     background-color: #ffdddd;
@@ -333,7 +334,7 @@ span {
     margin-top: 20px;
 }
 
-.btn.enhanced-btn {
+.btnn.enhanced-btn {
     padding: 10px 20px;
     border: none;
     border-radius: 30px;
@@ -347,7 +348,7 @@ span {
     gap: 8px;
 }
 
-.btn.enhanced-btn:hover {
+.btnn.enhanced-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 123, 255, 0.4);
 }
@@ -389,13 +390,13 @@ span {
     line-height: 1.6;
 }
 
-.btn {
+.btnn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
     background-color: #007bff;
-    color: white;
+    color: white !important;
     font-weight: 500;
     font-size: 14px;
     border: none;
@@ -405,17 +406,17 @@ span {
     box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
 }
 
-.btn:hover {
+.btnn:hover {
     background-color: #0056b3;
     box-shadow: 0 6px 16px rgba(0, 123, 255, 0.35);
     transform: translateY(-1px);
 }
 
-.btn:active {
+.btnn:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
 }
 
-.btn svg {
+.btnn svg {
     vertical-align: middle;
 }

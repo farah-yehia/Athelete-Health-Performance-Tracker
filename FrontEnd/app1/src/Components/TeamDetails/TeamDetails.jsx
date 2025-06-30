@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { toast } from "react-toastify";
 
 const TeamDetails = () => {
   const { team } = useParams();
@@ -93,16 +94,45 @@ const TeamDetails = () => {
 
   const closeReportModal = () => setReportModal(null);
 
-  const openLiveModal = (id) => {
-    setSelectedPlayerId(id);
-  };
+  const openLiveModal = (id) => setSelectedPlayerId(id);
 
-  const openReportFromLive = () => {
-    if (selectedPlayerStatic?.maxPlayTime) {
+  const openReportFromLive = async () => {
+    try {
+      // 1. Trigger AI model on the backend
+      await axios.post(
+        `${Back_Origin}/player/${selectedPlayerId}/post-match-analysis`
+      );
+
+      // 2. Wait a short moment (optional, in case DB update is async)
+      await new Promise((res) => setTimeout(res, 1000));
+
+      // 3. Fetch updated player data
+      const fetchRes = await axios.get(
+        `${Back_Origin}/api/player/${selectedPlayerId}`
+      );
+
+      const { name, maxPlayTime } = fetchRes.data;
+
+      if (!maxPlayTime) {
+        toast.warning("⚠️ AI model did not return a valid prediction.");
+        return;
+      }
+
+      // 4. Show report modal with new value
       setReportModal({
-        name: selectedPlayerStatic.name,
-        maxPlayTime: selectedPlayerStatic.maxPlayTime,
+        name,
+        maxPlayTime,
       });
+
+      setSelectedPlayerStatic((prev) => ({ ...prev, maxPlayTime }));
+
+      toast.success("✅ Match report generated successfully!");
+    } catch (error) {
+      const message =
+        error.response?.data?.error ||
+        error.message ||
+        "❌ Something went wrong while generating the report.";
+      toast.error(`⚠️ ${message}`);
     }
   };
 
@@ -204,15 +234,13 @@ const TeamDetails = () => {
                   </ResponsiveContainer>
                 </div>
 
-                {selectedPlayerStatic.maxPlayTime && (
-                  <button
-                    className="btn"
-                    style={{ marginTop: "20px" }}
-                    onClick={openReportFromLive}
-                  >
-                    <FileBarChart size={16} /> View Match Report
-                  </button>
-                )}
+                <button
+                  className="btnn"
+                  style={{ marginTop: "20px" }}
+                  onClick={openReportFromLive}
+                >
+                  <FileBarChart size={16} /> View Match Report
+                </button>
               </>
             )}
           </div>
@@ -242,7 +270,7 @@ const TeamDetails = () => {
                 marginTop: "20px",
               }}
             >
-              <button className="btn" onClick={downloadCSV}>
+              <button className="btnn" onClick={downloadCSV}>
                 <Download size={16} /> Download Report
               </button>
             </div>

@@ -2,16 +2,16 @@ const { v4, stringify } = require("uuid");
 const mongoose = require("mongoose");
 
 // Connect to MongoDB Atlas
-// mongoose
-//   .connect(
-//     "mongodb+srv://web-server:nBMyhMcZKGxi2rg@cluster0.nkbwbr9.mongodb.net/performance-tracker?retryWrites=true&w=majority&appName=Cluster0"
-//   )
-//   .then(() => console.log("Connected to MongoDB Atlas"))
-//   .catch((err) => console.error("Connection error", err));
 mongoose
-  .connect("mongodb://localhost:27017/performance-tracker")
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log(err));
+  .connect(
+    "mongodb+srv://web-server:nBMyhMcZKGxi2rg@cluster0.nkbwbr9.mongodb.net/performance-tracker?retryWrites=true&w=majority&appName=Cluster0"
+  )
+  .then(() => console.log("Connected to MongoDB Atlas"))
+  .catch((err) => console.error("Connection error", err));
+// mongoose
+//   .connect("mongodb://localhost:27017/performance-tracker")
+//   .then(() => console.log("Connected to MongoDB"))
+//   .catch((err) => console.log(err));
 
 // Player Schemamongoose
 const playerSchema = new mongoose.Schema({
@@ -26,8 +26,9 @@ const playerSchema = new mongoose.Schema({
   steps: { type: Number },
   heartRate: { type: Number }, // AI-predicted HR
   MheartRate: { type: Number }, // Hardware-measured HR
+  avg_heart_rate: { type: Number },
   distance: { type: Number }, // Covered distance (km)
-  maxPlayTime: { type: Number }, // ← ✅ ADDED: Predicted playing time from AI model (in minutes)
+  maxPlayTime: { type: Number }, //  Predicted playing time from AI model (in minutes)
   lastUpdated: { type: Date, default: Date.now },
   team: { type: String },
   img: { type: String },
