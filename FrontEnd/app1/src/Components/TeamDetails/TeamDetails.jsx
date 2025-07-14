@@ -104,13 +104,13 @@ const TeamDetails = () => {
       );
 
       // 2. Wait a short moment (optional, in case DB update is async)
-      await new Promise((res) => setTimeout(res, 1000));
+      await new Promise((res) => setTimeout(res, 3000));
 
       // 3. Fetch updated player data
       const fetchRes = await axios.get(
         `${Back_Origin}/api/player/${selectedPlayerId}`
       );
-
+      console.log("Fetched data:", fetchRes.data);
       const { name, maxPlayTime } = fetchRes.data;
 
       if (!maxPlayTime) {
@@ -126,14 +126,15 @@ const TeamDetails = () => {
 
       setSelectedPlayerStatic((prev) => ({ ...prev, maxPlayTime }));
 
-      toast.success("✅ Match report generated successfully!");
+      toast.success(" Match report generated successfully!");
     } catch (error) {
       const message =
         error.response?.data?.error ||
         error.message ||
-        "❌ Something went wrong while generating the report.";
+        " Something went wrong while generating the report.";
       toast.error(`⚠️ ${message}`);
     }
+
   };
 
   const downloadCSV = () => {
@@ -202,10 +203,10 @@ const TeamDetails = () => {
                     <h4>Actual Heart Rate</h4>
                     <p>{selectedPlayerLive.MheartRate} bpm</p>
                   </div>
-                  <div className="metric-card">
+                  {/* <div className="metric-card">
                     <h4>Distance</h4>
                     <p>{selectedPlayerLive.distance} km</p>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="chart-container">
@@ -257,7 +258,11 @@ const TeamDetails = () => {
             <h2 className="modal-title">📊 Match Report</h2>
             <div className="report-content">
               <p>
-                <strong>Max Playing Time:</strong> {reportModal.maxPlayTime}{" "}
+                <strong>Max Playing Time:</strong>{" "}
+                {typeof reportModal.maxPlayTime === "number" ||
+                typeof reportModal.maxPlayTime === "string"
+                  ? reportModal.maxPlayTime
+                  : "N/A"}{" "}
                 mins
               </p>
             </div>

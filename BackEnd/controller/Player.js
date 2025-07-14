@@ -61,7 +61,7 @@ router.get("/api/player/:id", async (req, res) => {
   }
 });
 
-// ✅ Trigger AI model only (no save, no response)
+// Trigger AI model 
 router.post("/player/:id/post-match-analysis", async (req, res) => {
   const playerId = req.params.id;
 
@@ -70,7 +70,7 @@ router.post("/player/:id/post-match-analysis", async (req, res) => {
     if (!player) return res.status(404).json({ error: "Player not found" });
 
     const inputData = {
-      _id: playerId, // Send ObjectId so Flask can update DB
+      _id: playerId, 
       avg_heart_rate: player.avg_heart_rate || 0,
       distance: player.distance || 0,
       duration_minutes: player.duration_minutes || 0,
@@ -82,13 +82,9 @@ router.post("/player/:id/post-match-analysis", async (req, res) => {
       calories: player.calories || 0,
       steps: player.steps || 0,
     };
-
     console.log("Sending to Flask model:", inputData);
-
     await axios.post("http://44.203.148.137:5001/predict-maxplay", inputData);
-
-    // ✅ No need to wait for response data, or save anything here
-    res.status(204).send(); // 204 No Content = success, nothing returned
+    res.status(204).send(); 
   } catch (err) {
     console.error("Post-match AI error:", err.message);
     res.status(500).json({ error: "AI trigger failed" });
