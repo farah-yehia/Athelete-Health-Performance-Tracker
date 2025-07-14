@@ -17,18 +17,64 @@ This system addresses the need for continuous health tracking of athletes during
 - Post-match AI model predicts safe maximum playtime
 
 ### 3. Web Application
-- Built with React.js (frontend), Node.js/Express (backend)
-- Role-based access for doctors and admins
-- Real-time data dashboard
-- JWT-based secure authentication
+The web dashboard acts as the central interface for doctors and admins, offering visualization, user management, and access to AI results.
 
+Tech Stack:
+
+Frontend: React.js with Material-UI
+
+Backend: Node.js with Express.js
+
+Database: MongoDB Atlas
+
+Authentication: JSON Web Token (JWT) with role-based access control
+
+Key Functionalities:
+
+🧑‍⚕️ Doctor View
+
+View assigned players’ health stats in real-time
+
+Edit player profiles (age, weight, contact info, availability)
+
+Monitor fatigue alerts and post-match AI reports
+
+🛠️ Admin View
+
+Full control over all doctors and player assignments
+
+Add/remove doctors and manage roles
+
+📊 Dashboard Features
+
+Live health data: Heart rate, calories, distance, BMI
+
+Health lifecycle tracking for each player
+
+Role-aware UI (admin vs doctor)
+
+🔐 Security
+
+Encrypted JWT token authentication
+
+Protected routes based on user roles
+
+Secure API endpoints
 ### 4. Cloud Infrastructure
 - Deployed on AWS EC2
 - Flask-based AI API for predictions
 - MongoDB Atlas for remote data storage
 
 ## 🚀 Features
-- Real-time athlete monitoring
-- Secure role-based login
-- Health insights & AI predictions
-- Admin and doctor management
+📡 Real-time biometric tracking from embedded devices
+
+🔍 AI-powered insights (fatigue alerts + max playtime prediction)
+
+👥 Role-based login for Doctors and Admins
+
+🧠 AI integration through Flask API
+
+🗂️ Doctor and player data management dashboard
+
+☁️ Scalable cloud deployment using AWS
+
